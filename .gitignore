@@ -2,3 +2,4 @@ vendor
 .vendor-new
 
 *.code-workspace
+debug.*
