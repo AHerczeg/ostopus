@@ -1,46 +1,37 @@
 package main
 
 import (
-	"context"
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"log"
-	"os"
-	"github.com/kolide/osquery-go"
+	"os/exec"
 )
 
+type result struct {
+	Arguments string `json:"arguments"`
+	Device    string `json:"device"`
+	Path      string `json:"path"`
+	Version   string `json:"version"`
+}
+
 func main() {
-	server, err := osquery.NewExtensionManagerServer("foobar", os.Args[1])
+	fmt.Println("Query: SELECT * FROM kernel_info;")
+	cmd := exec.Command("osqueryi", "--json", "SELECT * FROM kernel_info;")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	err := cmd.Run()
 	if err != nil {
-		log.Fatalf("Error creating extension: %s\n", err)
+		log.Fatal(err)
 	}
-
-	// Create and register a new table plugin with the server.
-	// table.NewPlugin requires the table plugin name,
-	// a slice of Columns and a Generate function.
-	server.RegisterPlugin(table.NewPlugin("foobar", FoobarColumns(), FoobarGenerate))
-	if err := server.Run(); err != nil {
-		log.Fatalln(err)
+	var res result
+	bytes, err := out.ReadBytes(']')
+	if err != nil {
+		log.Fatal(err)
 	}
-}
-
-	// FoobarColumns returns the columns that our table will return.
-func FoobarColumns() []table.ColumnDefinition {
-	return []table.ColumnDefinition{
-		table.TextColumn("foo"),
-		table.TextColumn("baz"),
-	}
-}
-
-// FoobarGenerate will be called whenever the table is queried. It should return
-// a full table scan.
-func FoobarGenerate(ctx context.Context, queryContext table.QueryContext) ([]map[string]string, error) {
-	return []map[string]string{
-		{
-			"foo": "bar",
-			"baz": "baz",
-		},
-		{
-			"foo": "bar",
-			"baz": "baz",
-		},
-	}, nil
+	json.Unmarshal(bytes[1:len(bytes)-1], &res)
+	fmt.Printf("arguments:\t | %s\n", res.Arguments)
+	fmt.Printf("device:\t\t | %s\n", res.Device)
+	fmt.Printf("path:\t\t | %s\n", res.Path)
+	fmt.Printf("version:\t | %s\n", res.Version)
 }
