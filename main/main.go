@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
+	"ostopus/query"
 )
 
 type result struct {
@@ -16,8 +17,12 @@ type result struct {
 }
 
 func main() {
-	fmt.Println("Query: SELECT * FROM kernel_info;")
-	cmd := exec.Command("osqueryi", "--json", "SELECT * FROM kernel_info;")
+	fmt.Println("Query: kernel_info")
+	query, ok := query.GetQuery("kernel_info")
+	if !ok {
+		fmt.Println("error: unexpected query")
+	}
+	cmd := exec.Command("osqueryi", "--json", query)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	err := cmd.Run()
