@@ -12,6 +12,10 @@ type OSHandler interface {
 type stdOSHandler struct {
 }
 
+func NewOSHandler() OSHandler {
+	return stdOSHandler{}
+}
+
 func (oh stdOSHandler) Execute(query string) (bytes.Buffer, error) {
 	var out bytes.Buffer
 	cmd := exec.Command("osqueryi", "--json", query)

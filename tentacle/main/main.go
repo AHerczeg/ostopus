@@ -1,6 +1,11 @@
 package main
 
-import "github.com/sirupsen/logrus"
+import (
+	"OStopus/tentacle/os"
+	"OStopus/tentacle/query"
+	"fmt"
+	"github.com/sirupsen/logrus"
+)
 
 type result struct {
 	Arguments string `json:"arguments"`
@@ -11,4 +16,9 @@ type result struct {
 
 func main() {
 	logrus.Info("starting up tentacle")
+	osHandler := os.NewOSHandler()
+	queryStore := query.NewQueryStore()
+	queryHandler := query.NewQueryHandler(queryStore, osHandler)
+
+	fmt.Println(queryHandler.RunSavedQuery("kernel_info"))
 }
