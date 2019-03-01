@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"ostopus/query"
+	"ostopus/octo/query"
 )
 
 type result struct {

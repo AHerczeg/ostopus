@@ -1,7 +1,12 @@
 package query
 
-var queryStore = map[string]string {
-	"kernel_info": "SELECT * FROM kernel_info;",
+type QueryStore struct {
+	queries map[string]string
+}
+
+func NewQueryStore() QueryStore {
+	var qs QueryStore
+
 }
 
 func GetQuery(option string) (string, bool) {
