@@ -3,7 +3,7 @@ package query
 import "encoding/json"
 
 type ResultDTO struct {
-	QueryID   int64
+	QueryID   string
 	DeviceID  string
 	arguments map[string]interface{}
 }
