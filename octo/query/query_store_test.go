@@ -13,23 +13,23 @@ func TestGetQuery(t *testing.T) {
 		want1 bool
 	}{
 		0: {
-			name: "has kernel_info",
-			args: args{option: "kernel_info"},
-			want: "SELECT * FROM kernel_info;",
+			name:  "has kernel_info",
+			args:  args{option: "kernel_info"},
+			want:  "SELECT * FROM kernel_info;",
 			want1: true,
 		},
 		1: {
-			name: "typo in kernel_info",
-			args: args{option: "kerel_info"},
-			want: "",
+			name:  "typo in kernel_info",
+			args:  args{option: "kerel_info"},
+			want:  "",
 			want1: false,
 		},
 		2: {
-			name: "unknown query",
-			args: args{option: "foobar"},
-			want: "",
+			name:  "unknown query",
+			args:  args{option: "foobar"},
+			want:  "",
 			want1: false,
-		}, 
+		},
 	}
 
 	for _, tt := range tests {
