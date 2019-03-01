@@ -16,7 +16,7 @@ func NewQueryHandler(store localQueryStore, os os.OSHandler) QueryHandler {
 }
 
 func (qh QueryHandler) RunSavedQuery(name string) (ResultDTO, error) {
-	fmt.Printf("Running query \"%s\"", name)
+	logrus.Info("Running query: ", name)
 	query, err := qh.fetchQuery(name)
 	if err != nil {
 		return ResultDTO{}, err
@@ -25,7 +25,7 @@ func (qh QueryHandler) RunSavedQuery(name string) (ResultDTO, error) {
 }
 
 func (qh QueryHandler) RunCustomQuery(query string) (ResultDTO, error) {
-	logrus.Info("Running query", query)
+	logrus.Info("Running query: ", query)
 	return qh.executeQuery(query)
 }
 

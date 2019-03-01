@@ -23,6 +23,7 @@ type localQueryStore struct {
 
 func NewQueryStore() localQueryStore {
 	var qs localQueryStore
+	qs.queries = make(map[string]string)
 
 	for _, q := range queries {
 		qs.AddQueries(q)
@@ -48,7 +49,7 @@ func (qs *localQueryStore) AddQueries(queries map[string]string) {
 }
 
 func (qs *localQueryStore) AddQuery(name, query string) {
-	if _, ok := qs.queries[name]; !ok {
+	if _, ok := qs.queries[name]; ok {
 		logrus.Info("A query with name \"%s\" already exists in query store", name)
 	} else {
 		qs.queries[name] = query
