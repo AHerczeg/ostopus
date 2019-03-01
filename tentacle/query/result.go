@@ -1,6 +1,8 @@
 package query
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type ResultDTO struct {
 	QueryID   string
@@ -17,8 +19,8 @@ func (r ResultDTO) HasField(field string) bool {
 	return ok
 }
 
-func (r ResultDTO) UnmarshalArguments(rawMessage []byte) error {
-	if err := json.Unmarshal(rawMessage, r.arguments); err != nil {
+func (r *ResultDTO) UnmarshalArguments(rawMessage []byte) error {
+	if err := json.Unmarshal(rawMessage, &r.arguments); err != nil {
 		return err
 	}
 	return nil
