@@ -2,6 +2,7 @@ package query
 
 import (
 	"OStopus/tentacle/os"
+	"bytes"
 	"fmt"
 	"github.com/sirupsen/logrus"
 )
@@ -43,6 +44,11 @@ func (qh QueryHandler) executeQuery(query string) (ResultDTO, error) {
 		return ResultDTO{}, err
 	}
 	var result ResultDTO
-	result.UnmarshalArguments(response.Bytes())
+	result.UnmarshalArguments(formatRawMessage(response))
 	return result, nil
+}
+
+func formatRawMessage(out bytes.Buffer) []byte {
+	bytes, _ := out.ReadBytes(']')
+	return bytes[1 : len(bytes)-1]
 }
