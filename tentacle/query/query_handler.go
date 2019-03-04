@@ -3,8 +3,14 @@ package query
 import (
 	"OStopus/tentacle/os"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"regexp"
+)
+
+var (
+	jsonRegex = regexp.MustCompile("{\\s*(\"[^\"]*\":\"[^\"]*\"\\s*)+(,\\s*(\"[^\"]*\":\"[^\"]*\")\\s*)*}")
 )
 
 type QueryHandler struct {
@@ -44,11 +50,17 @@ func (qh QueryHandler) executeQuery(query string) (ResultDTO, error) {
 		return ResultDTO{}, err
 	}
 	var result ResultDTO
-	result.UnmarshalArguments(formatRawMessage(response))
+	result.UnmarshalArguments(cleanJSON(response))
 	return result, nil
 }
 
-func formatRawMessage(out bytes.Buffer) []byte {
-	bytes, _ := out.ReadBytes(']')
-	return bytes[1 : len(bytes)-1]
+func cleanJSON(out bytes.Buffer) []byte {
+	jsonRegex.Longest()
+	cleanedJSON := jsonRegex.Find(out.Bytes())
+	fmt.Println(json.Valid(cleanedJSON))
+	fmt.Println(cleanedJSON)
+	if !json.Valid(cleanedJSON) {
+		return []byte{}
+	}
+	return cleanedJSON
 }
