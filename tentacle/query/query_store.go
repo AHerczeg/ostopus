@@ -50,7 +50,7 @@ func (qs *localQueryStore) AddQueries(queries map[string]string) {
 
 func (qs *localQueryStore) AddQuery(name, query string) {
 	if _, ok := qs.queries[name]; ok {
-		logrus.Info("A query with name \"%s\" already exists in query store", name)
+		logrus.Info("A query with name already exists in query store", "name", name)
 	} else {
 		qs.queries[name] = query
 	}
