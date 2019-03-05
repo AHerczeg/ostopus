@@ -190,9 +190,24 @@ func Test_cleanJSON(t *testing.T) {
 			want: []byte("{\"a\":\"b\"}"),
 		},
 		{
+			name: "Clean json with special characters",
+			args: args{out: []byte("{\"!@#$%^&*(),.\":\"b\"}")},
+			want: []byte("{\"!@#$%^&*(),.\":\"b\"}"),
+		},
+		{
 			name: "json surrounded by brackets",
 			args: args{out: []byte("[{\"a\":\"b\"}]")},
 			want: []byte("{\"a\":\"b\"}"),
+		},
+		{
+			name: "Invalid json",
+			args: args{out: []byte("{\"a\":\"b\":}")},
+			want: []byte{},
+		},
+		{
+			name: "Valid json with invalid special characters",
+			args: args{out: []byte("{\"a//\":\"b\":}")},
+			want: []byte{},
 		},
 	}
 	for _, tt := range tests {
