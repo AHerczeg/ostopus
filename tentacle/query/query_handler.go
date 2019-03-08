@@ -14,11 +14,11 @@ var (
 )
 
 type QueryHandler struct {
-	queryStore localQueryStore
+	queryStore QueryStore
 	osHandler  os.OSHandler
 }
 
-func NewQueryHandler(store localQueryStore, os os.OSHandler) QueryHandler {
+func NewQueryHandler(store QueryStore, os os.OSHandler) QueryHandler {
 	return QueryHandler{queryStore: store, osHandler: os}
 }
 

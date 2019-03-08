@@ -18,7 +18,7 @@ func main() {
 	logrus.Info("starting up tentacle")
 	osHandler := os.NewOSHandler()
 	queryStore := query.NewQueryStore()
-	queryHandler := query.NewQueryHandler(queryStore, osHandler)
+	queryHandler := query.NewQueryHandler(&queryStore, osHandler)
 
 	fmt.Println(queryHandler.RunSavedQuery("kernel_info"))
 }
