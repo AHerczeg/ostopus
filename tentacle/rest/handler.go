@@ -15,5 +15,14 @@ func StartRouter(address string) {
 }
 
 func setupRouter(router *mux.Router) {
+	router.HandleFunc("/", receiveCommand).Methods("POST")
+	router.HandleFunc("/register/{address}", register).Methods("GET")
+}
+
+func register(writer http.ResponseWriter, r *http.Request) {
+
+}
+
+func receiveCommand(w http.ResponseWriter, r *http.Request) {
 
 }
