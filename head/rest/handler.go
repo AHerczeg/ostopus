@@ -2,6 +2,7 @@ package rest
 
 import (
 	"ostopus/head/tentacles"
+	"ostopus/head/config"
 	"ostopus/shared/command"
 	"ostopus/shared/tentacle"
 	"bytes"
@@ -16,7 +17,6 @@ import (
 
 func MustStartRouter(address string)  {
 	if err := StartRouter(address); err != nil {
-		logrus.WithError(err)
 		panic(err)
 	}
 }
@@ -27,14 +27,15 @@ func StartRouter(address string) error{
 	setupRouter(router)
 	logrus.Info("Listening and serving HTTP", "Address", address)
 	if err := http.ListenAndServe(address, router); err != nil {
+		logrus.WithError(err)
 		return err
 	}
 	return nil
 }
 
 func setupRouter(router *mux.Router) {
-	router.HandleFunc("/register", registerTentacle).Methods("POST")
-	router.HandleFunc("/ping", pingAll).Methods("GET")
+	router.HandleFunc("/register", config.AddMetricsToHandler("registerTentacle", "", registerTentacle)).Methods("POST")
+	router.HandleFunc("/ping", config.AddMetricsToHandler("pingAll", "Ping all tentacles", pingAll)).Methods("GET")
 }
 
 func registerTentacle(w http.ResponseWriter, r *http.Request) {
