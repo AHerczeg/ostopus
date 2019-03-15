@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	logrus.Info("starting up head")
+	logrus.Info("starting up OStopus head")
 	config.InitMetrics()
 	rest.MustStartRouter(":6060")
 }
