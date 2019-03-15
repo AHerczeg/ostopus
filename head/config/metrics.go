@@ -6,12 +6,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"fmt"
 )
 
 var (
+	// Metrics
+	PingCounter *prometheus.CounterVec
+
 	metricsAddress string
-	metrics []prometheus.Collector
 )
 
 func InitMetrics(address string) {
@@ -28,11 +29,14 @@ func InitMetrics(address string) {
 }
 
 func populateMetrics() {
+	PingCounter = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "ostopus_pingCounter",
+		Help: "How many pings were responded by tentacles",
+	}, []string{"live"})
 }
 
 func AddMetricsToHandler(name string, help string, handler http.HandlerFunc) http.HandlerFunc {
-	fmt.Println("AAAAAAAA")
-	logrus.WithField("adding metric to handler", logrus.Fields{"name":name, "help":help})
+	logrus.WithFields(logrus.Fields{"name":name, "help":help}).Info("adding metric to handler")
 	return promhttp.InstrumentHandlerCounter(
 		promauto.NewCounterVec(
 			prometheus.CounterOpts{

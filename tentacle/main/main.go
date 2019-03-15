@@ -3,22 +3,17 @@ package main
 import (
 	"OStopus/tentacle/os"
 	"OStopus/tentacle/query"
-	"fmt"
 	"github.com/sirupsen/logrus"
+	"net/http"
 )
 
-type result struct {
-	Arguments string `json:"arguments"`
-	Device    string `json:"device"`
-	Path      string `json:"path"`
-	Version   string `json:"version"`
-}
+var (
+	QueryHandler *query.QueryHandler
+)
 
 func main() {
 	logrus.Info("starting up tentacle")
 	osHandler := os.NewOSHandler()
-	queryStore := query.NewQueryStore()
-	queryHandler := query.NewQueryHandler(&queryStore, osHandler)
-
-	fmt.Println(queryHandler.RunSavedQuery("kernel_info"))
+	queryStore := query.NewLocalQueryStore()
+	http.ListenAndServe()
 }

@@ -4,6 +4,9 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/inconshreveable/log15"
 	"net/http"
+	"ostopus/shared/tentacle"
+	"encoding/json"
+	"ostopus/shared/helpers"
 )
 
 func StartRouter(address string) {
@@ -24,5 +27,9 @@ func register(writer http.ResponseWriter, r *http.Request) {
 }
 
 func receiveCommand(w http.ResponseWriter, r *http.Request) {
-
+	var tentacle tentacle.Tentacle
+	if err := json.NewDecoder(r.Body).Decode(&tentacle); err != nil {
+		helpers.WriteResponse(w, 400, "failed to parse tentacle")
+		return
+	}
 }

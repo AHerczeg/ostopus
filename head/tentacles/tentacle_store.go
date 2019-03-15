@@ -8,6 +8,12 @@ var (
 	tentacles *store
 )
 
+type tentacleStore interface {
+	SaveTentacle(tentacle.Tentacle)
+	HasTentacle(string) bool
+	RemoveTentacle(string)bool
+}
+
 type store struct {
 	tentacles map[string]tentacle.Tentacle
 }
@@ -31,4 +37,15 @@ func (s *store) GetAllTentacles() []tentacle.Tentacle {
 		tentacles = append(tentacles, tentacle)
 	}
 	return tentacles
+}
+
+func (s *store) HasTentacle(name string) bool {
+	_, ok := s.tentacles[name]
+	return ok
+}
+
+func (s *store) RemoveTentacle(name string) bool {
+	_, ok := s.tentacles[name]
+	delete(s.tentacles, name)
+	return ok
 }
