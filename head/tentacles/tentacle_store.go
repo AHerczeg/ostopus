@@ -1,7 +1,7 @@
 package tentacles
 
 import (
-	"OStopus/shared/tentacle"
+	"ostopus/shared/tentacle"
 )
 
 var (

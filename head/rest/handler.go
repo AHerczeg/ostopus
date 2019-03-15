@@ -1,24 +1,34 @@
 package rest
 
 import (
-	"OStopus/octo/tentacles"
-	"OStopus/shared/command"
-	"OStopus/shared/tentacle"
+	"ostopus/head/tentacles"
+	"ostopus/shared/command"
+	"ostopus/shared/tentacle"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
-	log "github.com/inconshreveable/log15"
-	"io/ioutil"
+	"github.com/prometheus/common/log"
 	"net/http"
+	"io/ioutil"
+	"github.com/sirupsen/logrus"
 )
 
-func StartRouter(address string) {
+func MustStartRouter(address string)  {
+	if err := StartRouter(address); err != nil {
+		panic(err)
+	}
+}
+
+func StartRouter(address string) error{
 	log.Info("Starting up router")
 	router := mux.NewRouter()
 	setupRouter(router)
-	log.Info("Listening and serving HTTP", "Address", address)
-	http.ListenAndServe(address, router)
+	logrus.Info("Listening and serving HTTP", "Address", address)
+	if err := http.ListenAndServe(address, router); err != nil {
+		return err
+	}
+	return nil
 }
 
 func setupRouter(router *mux.Router) {
