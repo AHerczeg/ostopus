@@ -3,16 +3,14 @@ package rest
 import (
 	"ostopus/head/tentacles"
 	"ostopus/head/config"
-	"ostopus/shared/command"
 	"ostopus/shared/tentacle"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
-	"github.com/prometheus/common/log"
 	"net/http"
 	"io/ioutil"
 	"github.com/sirupsen/logrus"
+	"ostopus/shared/helpers"
 )
 
 func MustStartRouter(address string)  {
@@ -22,7 +20,7 @@ func MustStartRouter(address string)  {
 }
 
 func StartRouter(address string) error{
-	log.Info("Starting up router")
+	logrus.Info("Starting up router")
 	router := mux.NewRouter()
 	setupRouter(router)
 	logrus.Info("Listening and serving HTTP", "Address", address)
@@ -40,25 +38,34 @@ func setupRouter(router *mux.Router) {
 
 func registerTentacle(w http.ResponseWriter, r *http.Request) {
 	var tentacle tentacle.Tentacle
-	_ = json.NewDecoder(r.Body).Decode(&tentacle)
-	tentacles.Tentacles().SaveTentacle(tentacle)
-	log.Info("New tentacle registered", "Name", tentacle.Name, "Address", tentacle.Address)
-	json.NewEncoder(w).Encode(tentacle)
-}
-
-func sendCommand(w http.ResponseWriter, r *http.Request) {
-
+	if err := json.NewDecoder(r.Body).Decode(&tentacle); err != nil {
+		helpers.WriteResponse(w, 400, []byte("failed to parse tentacle"))
+		return
+	}
+	if tentacles.Tentacles().HasTentacle(tentacle.Name) {
+		helpers.WriteResponse(w, 409, []byte("name already in use"))
+		return
+	}
+  	tentacles.Tentacles().SaveTentacle(tentacle)
+	logrus.WithFields(logrus.Fields{"Name": tentacle.Name, "Address": tentacle.Address}).Info("New tentacle registered")
+	helpers.WriteResponse(w, 201, []byte{})
 }
 
 func pingAll(w http.ResponseWriter, r *http.Request) {
-	log.Info("Pinging all tentacles")
+	logrus.Info("Pinging all tentacles")
+	results := make(map[string]bool)
 	for _, tentacle := range tentacles.Tentacles().GetAllTentacles() {
-		go pingTentacle(tentacle)
+		pingTentacle(tentacle, results)
 	}
+	marshalledResults, err := json.Marshal(results)
+	if err != nil {
+		// TODO
+	}
+	helpers.WriteResponse(w, 200, marshalledResults)
 }
 
-func sendToURL(url string, command command.Command) []byte {
-	marshalledCommand, err := json.Marshal(command)
+func sendQuery(url string, query string) []byte {
+	marshalledCommand, err := json.Marshal(query)
 	if err != nil {
 		// TODO
 	}
@@ -75,6 +82,16 @@ func sendToURL(url string, command command.Command) []byte {
 	return body
 }
 
-func pingTentacle(tentacle tentacle.Tentacle) {
-	fmt.Printf("Pinging %s: %v", tentacle.Name, sendToURL(tentacle.Address, command.Command{Name: "ping"}))
+func pingTentacle(tentacle tentacle.Tentacle, results map[string]bool) {
+	res, err := http.Get(tentacle.Address + "/ping")
+	if err != nil {
+		logrus.WithError(err)
+	}
+	if res.StatusCode ==  200 {
+		config.PingCounter.WithLabelValues("live").Inc()
+		results[tentacle.Name] = true
+	} else {
+		config.PingCounter.WithLabelValues("dead").Inc()
+		results[tentacle.Name] = false
+	}
 }

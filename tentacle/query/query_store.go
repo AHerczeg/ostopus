@@ -21,7 +21,7 @@ type localQueryStore struct {
 	queries map[string]string
 }
 
-func NewQueryStore() localQueryStore {
+func NewLocalQueryStore() localQueryStore {
 	var qs localQueryStore
 	qs.queries = make(map[string]string)
 

@@ -8,6 +8,6 @@ import (
 
 func main() {
 	logrus.Info("starting up OStopus head")
-	config.InitMetrics(":1972")
-	rest.MustStartRouter(":1515")
+	config.InitMetrics(":7070")
+	rest.MustStartRouter(":6060")
 }

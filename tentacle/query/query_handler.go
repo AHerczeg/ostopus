@@ -18,8 +18,8 @@ type QueryHandler struct {
 	osHandler  os.OSHandler
 }
 
-func NewQueryHandler(store QueryStore, os os.OSHandler) QueryHandler {
-	return QueryHandler{queryStore: store, osHandler: os}
+func NewQueryHandler(store QueryStore, os os.OSHandler) *QueryHandler {
+	return &QueryHandler{queryStore: store, osHandler: os}
 }
 
 func (qh QueryHandler) RunSavedQuery(name string) (ResultDTO, error) {
