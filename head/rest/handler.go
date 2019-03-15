@@ -16,6 +16,7 @@ import (
 
 func MustStartRouter(address string)  {
 	if err := StartRouter(address); err != nil {
+		logrus.WithError(err)
 		panic(err)
 	}
 }
