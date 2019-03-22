@@ -1,25 +1,25 @@
 package rest
 
 import (
-	"ostopus/head/tentacles"
-	"ostopus/head/config"
-	"ostopus/shared/tentacle"
 	"bytes"
 	"encoding/json"
 	"github.com/gorilla/mux"
-	"net/http"
-	"io/ioutil"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
+	"net/http"
+	"ostopus/head/config"
+	"ostopus/head/tentacles"
 	"ostopus/shared/helpers"
+	"ostopus/shared/tentacle"
 )
 
-func MustStartRouter(address string)  {
+func MustStartRouter(address string) {
 	if err := StartRouter(address); err != nil {
 		panic(err)
 	}
 }
 
-func StartRouter(address string) error{
+func StartRouter(address string) error {
 	logrus.Info("Starting up router")
 	router := mux.NewRouter()
 	setupRouter(router)
@@ -46,7 +46,7 @@ func registerTentacle(w http.ResponseWriter, r *http.Request) {
 		helpers.WriteResponse(w, 409, []byte("name already in use"))
 		return
 	}
-  	tentacles.Tentacles().SaveTentacle(tentacle)
+	tentacles.Tentacles().SaveTentacle(tentacle)
 	logrus.WithFields(logrus.Fields{"Name": tentacle.Name, "Address": tentacle.Address}).Info("New tentacle registered")
 	helpers.WriteResponse(w, 201, []byte{})
 }
@@ -87,7 +87,7 @@ func pingTentacle(tentacle tentacle.Tentacle, results map[string]bool) {
 	if err != nil {
 		logrus.WithError(err)
 	}
-	if res.StatusCode ==  200 {
+	if res.StatusCode == 200 {
 		config.PingCounter.WithLabelValues("live").Inc()
 		results[tentacle.Name] = true
 	} else {

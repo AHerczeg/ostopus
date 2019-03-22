@@ -1,12 +1,12 @@
 package rest
 
 import (
+	"encoding/json"
 	"github.com/gorilla/mux"
 	log "github.com/inconshreveable/log15"
 	"net/http"
-	"ostopus/shared/tentacle"
-	"encoding/json"
 	"ostopus/shared/helpers"
+	"ostopus/shared/tentacle"
 )
 
 func StartRouter(address string) {

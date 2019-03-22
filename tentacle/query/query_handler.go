@@ -1,11 +1,11 @@
 package query
 
 import (
-	"ostopus/tentacle/os"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"ostopus/tentacle/os"
 	"regexp"
 )
 
