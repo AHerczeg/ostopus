@@ -1,8 +1,10 @@
 FROM alpine:latest
 
-RUN mkdir /head
-WORKDIR /head
-COPY . .
+RUN mkdir /app
+WORKDIR /app
+COPY . /app/
 
-CMD ["/head/main"]
-EXPOSE 7070
+CMD ["/app/headd"]
+
+EXPOSE 6060:6060
+EXPOSE 7070:7070
