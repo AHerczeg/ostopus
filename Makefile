@@ -59,7 +59,7 @@ run.tentacle: build.tentacle
 .PHONY: run.docker
 run.docker: build.head
 	docker build -t head-alpine -f head/Dockerfile .
-	docker run head-alpine
+	docker run -p 6060:6060 -p 7070:7070 head-alpine
 
 .PHONY: run.all
 run.all: logo run.docker run.tentacle
