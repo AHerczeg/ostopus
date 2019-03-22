@@ -14,23 +14,24 @@ BINARY_NAME_TENTACLE=tentacled
 ## source : http://www.oocities.org/spunk1111/aquatic.htm
 define textlogo
                      ______
-                 { /        \ }    OStopus
-                  / /o \  / o\
+                 { /        \ }
+                  / /o \  / o
                  |  \__/  \__/
                   \   ( ^ )  /           ___.--,
           _.._     \   uu   /     _.---'`__.-( (_.
-   __.--'`_.. '.__.\    '--. \_.-' ,.--'`     `""`
+   __.--'`_.. '.__.\    '--.\__.-' ,.--'`     `""`
   ( ,.--'`   ',__ /./;   ;, '.__.'`    __
   _`) )  .---.__.' / |   |\   \__..--""  """--.,_
  `---' .'.''-._.-'`_./  /\ '.  \ _.-~~~````~~~-._`-.__.'
        | |  .' _.-' |  |  \  \  '.               `~---`
-        \ \/ .'     \  \   '. '-._)
-         \/ /        \  \    `=.__`~-.
-         / /\         `) )    / / `"".`\
-   , _.-'.'\ \        / /    ( (     / /
-    `--~`   ) )    .-'.'      '.'.  | (
-           (/`    ( (`          ) )  '-;
-            `      '-;         (-'
+        \ \/ .'     \  \   '. '-._)    ____   _____ _
+         \/ /        \  \    `=.__`~-./ __ \ / ____| |
+         / /\         `) )    / / `""| |  | | (___ | |_ ___  _ __  _   _ ___
+   , _.-'.'\ \        / /    ( (     | |  | |\___ \| __/ _ \| '_ \| | | / __|
+    `--~`   ) )    .-'.'      '.'.  || |__| |____) | || (_) | |_) | |_| \__ |
+           (/`    ( (`          ) )  '\____/|_____/ \__\___/| .__/ \__,_|___/
+            `      '-;         (-'                          | |
+                                                            |_|
 endef
 
 head:
@@ -52,13 +53,17 @@ run.tentacle: build.tentacle
 run.docker: build.head
 	docker build -t head-alpine -f head/Dockerfile .
 
-run.all: run.docker run.tentacle
+run.all: logo run.docker run.tentacle
+
 
 test.head:
 	$(GOBUILD) -v ./head/...
 
 test.tentacle:
 	$(GOBUILD) -v ./tentacle/...
+
+logo:
+	$(info $(textlogo))
 
 sanitize:
 	go fmt ./head/...
