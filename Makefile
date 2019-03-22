@@ -1,6 +1,6 @@
 # Basic go commands
 GOCMD=go
-GOBUILD=$(GOCMD) build
+GOBUILD=CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOCMD) build
 GOCLEAN=$(GOCMD) clean
 GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
@@ -34,44 +34,57 @@ define textlogo
                                                             |_|
 endef
 
+.PHONY: head
 head:
-	$(GOBUILD) -o ostopus/$(BINARY_NAME_HEAD) -v ./head/main/
+	$(GOBUILD) -o $(BINARY_NAME_HEAD) -v ./head/main/
 
+.PHONY: tentacle
 tentacle:
-	$(GOBUILD) -o ostopus/$(BINARY_NAME_TENTACLE) -v ./tentacle/main/
+	$(GOBUILD) -o $(BINARY_NAME_TENTACLE) -v ./tentacle/main/
 
+.PHONY: build.head
 build.head: test.head head
 
+.PHONY: build.tentacle
 build.tentacle: test.tentacle tentacle
 
+.PHONY: run.head
 run.head: build.head
 	./$(BINARY_NAME_HEAD)
 
+.PHONY: run.tentacle
 run.tentacle: build.tentacle
 	./$(BINARY_NAME_TENTACLE)
 
+.PHONY: run.docker
 run.docker: build.head
 	docker build -t head-alpine -f head/Dockerfile .
+	docker run head-alpine
 
+.PHONY: run.all
 run.all: logo run.docker run.tentacle
 
-
+.PHONY: test.head
 test.head:
 	$(GOBUILD) -v ./head/...
 
+.PHONY: test.tentacle
 test.tentacle:
 	$(GOBUILD) -v ./tentacle/...
 
+.PHONY: logo
 logo:
 	$(info $(textlogo))
 
+.PHONY: clean
+clean:
+	$(GOCLEAN)
+	rm -f ./headd
+	rm -f ./tentacled
+
+.PHONY: sanitize
 sanitize:
 	go fmt ./head/...
 	go fmt ./tentacle/...
     go vet -composites=false ./head/...
     go vet -composites=false ./tentacle/...
-
-clean:
-	$(GOCLEAN)
-	rm -f ./headd
-	rm -f ./tentacled
