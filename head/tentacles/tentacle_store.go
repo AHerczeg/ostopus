@@ -11,7 +11,7 @@ var (
 type tentacleStore interface {
 	SaveTentacle(tentacle.Tentacle)
 	HasTentacle(string) bool
-	RemoveTentacle(string)bool
+	RemoveTentacle(string) bool
 }
 
 type store struct {

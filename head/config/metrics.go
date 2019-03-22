@@ -2,10 +2,10 @@ package config
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
-	"net/http"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+	"net/http"
 )
 
 var (
@@ -36,7 +36,7 @@ func populateMetrics() {
 }
 
 func AddMetricsToHandler(name string, help string, handler http.HandlerFunc) http.HandlerFunc {
-	logrus.WithFields(logrus.Fields{"name":name, "help":help}).Info("adding metric to handler")
+	logrus.WithFields(logrus.Fields{"name": name, "help": help}).Info("adding metric to handler")
 	return promhttp.InstrumentHandlerCounter(
 		promauto.NewCounterVec(
 			prometheus.CounterOpts{

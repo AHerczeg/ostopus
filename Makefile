@@ -31,11 +31,21 @@ run.tentacle:
 	build.tentacle
 	./$(BINARY_NAME_TENTACLE)
 
+run.docker:
+	build.head
+
+
 test.head:
 	$(GOBUILD) -v ./head/...
 
 test.tentacle:
 	$(GOBUILD) -v ./tentacle/...
+
+sanitize:
+	go fmt ./head/...
+	go fmt ./tentacle/...
+    go vet -composites=false ./head/...
+    go vet -composites=false ./tentacle/...
 
 clean:
 	$(GOCLEAN)

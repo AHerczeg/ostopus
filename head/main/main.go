@@ -1,10 +1,10 @@
 package main
 
 import (
-	"ostopus/head/rest"
-	"ostopus/head/config"
-	"github.com/sirupsen/logrus"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/sirupsen/logrus"
+	"ostopus/head/config"
+	"ostopus/head/rest"
 )
 
 func main() {
@@ -13,9 +13,8 @@ func main() {
 	rest.MustStartRouter(":6060")
 }
 
-
 func MustInc(name string) {
-	newCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: name,})
+	newCounter := prometheus.NewCounter(prometheus.CounterOpts{Name: name})
 	if err := prometheus.Register(newCounter); err != nil {
 		if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
 			// Counter already exists, no need to register
