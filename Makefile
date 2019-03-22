@@ -9,31 +9,50 @@ GOGET=$(GOCMD) get
 BINARY_NAME_HEAD=headd
 BINARY_NAME_TENTACLE=tentacled
 
+.DEFAULT_GOAL := run.all
+
+## source : http://www.oocities.org/spunk1111/aquatic.htm
+define textlogo
+                     ______
+                 { /        \ }    OStopus
+                  / /o \  / o\
+                 |  \__/  \__/
+                  \   ( ^ )  /           ___.--,
+          _.._     \   uu   /     _.---'`__.-( (_.
+   __.--'`_.. '.__.\    '--. \_.-' ,.--'`     `""`
+  ( ,.--'`   ',__ /./;   ;, '.__.'`    __
+  _`) )  .---.__.' / |   |\   \__..--""  """--.,_
+ `---' .'.''-._.-'`_./  /\ '.  \ _.-~~~````~~~-._`-.__.'
+       | |  .' _.-' |  |  \  \  '.               `~---`
+        \ \/ .'     \  \   '. '-._)
+         \/ /        \  \    `=.__`~-.
+         / /\         `) )    / / `"".`\
+   , _.-'.'\ \        / /    ( (     / /
+    `--~`   ) )    .-'.'      '.'.  | (
+           (/`    ( (`          ) )  '-;
+            `      '-;         (-'
+endef
+
 head:
-	$(GOBUILD) -o $(BINARY_NAME_HEAD) -v ./head/main/
+	$(GOBUILD) -o ostopus/$(BINARY_NAME_HEAD) -v ./head/main/
 
 tentacle:
-	$(GOBUILD) -o $(BINARY_NAME_TENTACLE) -v ./tentacle/main/
+	$(GOBUILD) -o ostopus/$(BINARY_NAME_TENTACLE) -v ./tentacle/main/
 
-build.head:
-	test.head
-	head
+build.head: test.head head
 
-build.tentacle:
-	test.head
-	tentacle
+build.tentacle: test.tentacle tentacle
 
-run.head:
-	build.head
+run.head: build.head
 	./$(BINARY_NAME_HEAD)
 
-run.tentacle:
-	build.tentacle
+run.tentacle: build.tentacle
 	./$(BINARY_NAME_TENTACLE)
 
-run.docker:
-	build.head
+run.docker: build.head
+	docker build -t head-alpine -f head/Dockerfile .
 
+run.all: run.docker run.tentacle
 
 test.head:
 	$(GOBUILD) -v ./head/...
