@@ -6,7 +6,7 @@ GOTEST=$(GOCMD) test
 GOGET=$(GOCMD) get
 
 # Binary names
-BINARY_NAME_HEAD=headd
+BINARY_NAME_HEAD=head-build
 BINARY_NAME_TENTACLE=tentacled
 
 .DEFAULT_GOAL := run.all
