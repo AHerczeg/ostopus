@@ -3,7 +3,7 @@
 [![Build Status][build-shield]]()
 [![Contributors][contributors-shield]]()
 [![MIT License][license-shield]][license-url]
-[![Go Report Card](https://goreportcard.com/badge/gojp/goreportcard)](https://goreportcard.com/report/gojp/goreportcard)
+[![Go Report Card](https://goreportcard.com/badge/gojp/goreportcard)](https://goreportcard.com/report/github.com/AHerczeg/ostopus)
 
 <!-- PROJECT LOGO -->
 <br />
