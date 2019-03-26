@@ -1,6 +1,8 @@
 
 <!-- PROJECT SHIELDS -->
 [![Build Status][build-shield]]()
+[![Issues][issues-shield]]()
+[![Pull Requests][pr-shield]]()
 [![Contributors][contributors-shield]]()
 [![MIT License][license-shield]][license-url]
 [![Go Report Card](https://goreportcard.com/badge/gojp/goreportcard)](https://goreportcard.com/report/github.com/AHerczeg/ostopus)
@@ -100,6 +102,8 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 [build-shield]: https://img.shields.io/badge/build-passing-brightgreen.svg?style=flat-square
-[contributors-shield]: https://img.shields.io/badge/contributors-1-orange.svg?style=flat-square
+[issues-shield]: https://img.shields.io/github/issues/AHerczeg/ostopus.svg
+[pr-shield]: https://img.shields.io/github/issues-pr/AHerczeg/ostopus.svg
+[contributors-shield]: https://img.shields.io/github/contributors/AHerczeg/ostopus.svg
 [license-shield]: https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square
 [license-url]: https://choosealicense.com/licenses/mit
