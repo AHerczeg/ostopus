@@ -4,4 +4,4 @@ RUN mkdir /app
 WORKDIR /app
 COPY . /app/
 
-CMD ["/app/headd"]
+CMD ["/app/head-build"]
