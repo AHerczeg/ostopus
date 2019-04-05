@@ -58,9 +58,10 @@ func registerTentacle(w http.ResponseWriter, r *http.Request) {
 }
 
 func pingAll(w http.ResponseWriter, _ *http.Request) {
-	logrus.Info("Pinging all tentacles")
 	results := make(map[string]bool)
 	allTentacles := tentacles.Tentacles().GetAllTentacles()
+
+	logrus.WithFields(logrus.Fields{"tentacles": len(allTentacles)}).Info("Pinging all tentacles")
 
 	responses := make(chan pingResponse)
 
@@ -68,11 +69,13 @@ func pingAll(w http.ResponseWriter, _ *http.Request) {
 	wg.Add(len(allTentacles))
 
 	for _, tentacle := range allTentacles {
-		go pingTentacle(tentacle, responses)
+		go pingTentacle(tentacle, responses, &wg)
 	}
 
 	wg.Wait()
 	close(responses)
+
+	logrus.Info("Finished pinging")
 
 	for response := range responses {
 		results[response.tentacle] = response.response
@@ -104,19 +107,27 @@ func sendQuery(url string, query string) []byte {
 	return body
 }
 
-func pingTentacle(tentacle tentacle.Tentacle, responses chan pingResponse) {
+func pingTentacle(tentacle tentacle.Tentacle, response chan <- pingResponse, wg *sync.WaitGroup) {
+	logrus.WithFields(logrus.Fields{"name": tentacle.Name,"address": tentacle.Address}).Info("Pinging tentacle")
 	res, err := http.Get(tentacle.Address + "/ping")
 	if err != nil {
 		logrus.WithError(err)
-		responses <- pingResponse{
+		response <- pingResponse{
 			tentacle: tentacle.Name,
 			response: false,
 		}
 		return
 	}
 
-	responses <- pingResponse{
+	logrus.WithFields(logrus.Fields{"name": tentacle.Name,"address": tentacle.Address, "code": res.StatusCode}).Info("Received ping response")
+
+	pr := pingResponse{
 		tentacle: tentacle.Name,
 		response: res.StatusCode == http.StatusOK,
 	}
+
+	response <- pr
+
+	logrus.WithFields(logrus.Fields{"name": tentacle.Name,"address": tentacle.Address}).Info("Finished pinging tentacle")
+	wg.Done()
 }
