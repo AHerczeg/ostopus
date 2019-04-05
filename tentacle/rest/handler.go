@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/gorilla/mux"
-	log "github.com/inconshreveable/log15"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -14,10 +14,10 @@ import (
 )
 
 func StartRouter(address string) {
-	log.Info("Starting up router")
+	logrus.Info("Starting up router")
 	router := mux.NewRouter()
 	setupRouter(router)
-	log.Info("Listening and serving HTTP", "Address", address)
+	logrus.Info("Listening and serving HTTP", "Address", address)
 	http.ListenAndServe(address, router)
 }
 
@@ -28,36 +28,51 @@ func setupRouter(router *mux.Router) {
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("Registering tentacle...")
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
+		logrus.Error(err)
 		http.Error(w, "error reading request body",
 			http.StatusInternalServerError)
 	}
 	headAddress := string(body)
 	if _, err = url.ParseRequestURI(headAddress); err != nil {
-		http.Error(w, "error parsing head address",
-			http.StatusBadRequest)
+		logrus.Error(err)
+		helpers.WriteResponse(w, http.StatusBadRequest, []byte("error parsing head address"))
 		return
 	}
+
+	logrus.WithFields(logrus.Fields{
+		"address": headAddress,
+	}).Info("Received head address")
 
 	self := local.GetSelf()
 
 	marshaledSelf, err := json.Marshal(self)
 	if err != nil {
+		logrus.Error(err)
 		http.Error(w, "unexpected error",
 			http.StatusInternalServerError)
+		return
 	}
 
 	req, err := http.NewRequest("POST", headAddress, bytes.NewBuffer(marshaledSelf))
 	client := GetDefaultClient()
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "unexpected error while registering tentacle",
-			http.StatusInternalServerError)
+		logrus.Error(err)
+		helpers.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while registering tentacle"))
+		return
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusCreated {
+		local.SetHeadAddress(headAddress)
+	}
+
 	respBody, _ := ioutil.ReadAll(resp.Body)
+
+
 
 	helpers.WriteResponse(w, resp.StatusCode, respBody)
 }
@@ -65,6 +80,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 func receiveCommand(w http.ResponseWriter, r *http.Request) {
 	var tentacle tentacle.Tentacle
 	if err := json.NewDecoder(r.Body).Decode(&tentacle); err != nil {
+		logrus.Error(err)
 		http.Error(w, "error parsing command",
 			http.StatusBadRequest)
 		return
@@ -73,5 +89,6 @@ func receiveCommand(w http.ResponseWriter, r *http.Request) {
 }
 
 func ping (w http.ResponseWriter, _ *http.Request)  {
-	w.WriteHeader(http.StatusOK)
+	logrus.Info("Receiving ping")
+	helpers.WriteResponse(w, http.StatusOK, []byte{})
 }

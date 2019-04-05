@@ -5,7 +5,10 @@ import (
 	"ostopus/shared/tentacle"
 )
 
-var self tentacle.Tentacle
+var (
+	self		tentacle.Tentacle
+	headAddress	string
+)
 
 func InitSelf(name, address string) {
 	self.Name = name
@@ -15,4 +18,13 @@ func InitSelf(name, address string) {
 
 func GetSelf() tentacle.Tentacle {
 	return self
+}
+
+
+func GetHeadAddress() string {
+	return headAddress
+}
+
+func SetHeadAddress(address string) {
+	headAddress = address
 }
