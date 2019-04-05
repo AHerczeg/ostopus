@@ -5,6 +5,7 @@ import (
 	_ "ostopus/tentacle/os"
 	"ostopus/tentacle/query"
 	"ostopus/tentacle/rest"
+	"ostopus/tentacle/local"
 )
 
 var (
@@ -14,7 +15,11 @@ var (
 func main() {
 	logrus.Info("Starting up tentacle...")
 
+	local.InitSelf("test", "localhost:7070")
+
 	//osHandler := os.NewOSHandler()
 	//queryStore := query.NewLocalQueryStore()
 	rest.StartRouter(":7070")
+
+
 }

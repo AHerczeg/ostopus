@@ -1,10 +1,10 @@
 package query
 
 import (
-	"OStopus/tentacle/os"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"ostopus/tentacle/os"
 	"reflect"
 	"testing"
 )
