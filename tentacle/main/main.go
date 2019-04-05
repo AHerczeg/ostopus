@@ -2,7 +2,9 @@ package main
 
 import (
 	"github.com/sirupsen/logrus"
+	_ "ostopus/tentacle/os"
 	"ostopus/tentacle/query"
+	"ostopus/tentacle/rest"
 )
 
 var (
@@ -10,8 +12,9 @@ var (
 )
 
 func main() {
-	logrus.Info("starting up tentacle")
+	logrus.Info("Starting up tentacle...")
+
 	//osHandler := os.NewOSHandler()
 	//queryStore := query.NewLocalQueryStore()
-	//http.ListenAndServe()
+	rest.StartRouter(":7070")
 }

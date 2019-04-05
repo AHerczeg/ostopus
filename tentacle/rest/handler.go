@@ -18,8 +18,9 @@ func StartRouter(address string) {
 }
 
 func setupRouter(router *mux.Router) {
-	router.HandleFunc("/", receiveCommand).Methods("POST")
-	router.HandleFunc("/register/{address}", register).Methods("GET")
+	router.HandleFunc("/query", receiveCommand).Methods("POST")
+	router.HandleFunc("/register", register).Methods("POST")
+	router.HandleFunc("/ping", ping).Methods("GET")
 }
 
 func register(writer http.ResponseWriter, r *http.Request) {
@@ -29,7 +30,11 @@ func register(writer http.ResponseWriter, r *http.Request) {
 func receiveCommand(w http.ResponseWriter, r *http.Request) {
 	var tentacle tentacle.Tentacle
 	if err := json.NewDecoder(r.Body).Decode(&tentacle); err != nil {
-		helpers.WriteResponse(w, 400, []byte("failed to parse tentacle"))
+		helpers.WriteResponse(w, 400, []byte("failed to parse command"))
 		return
 	}
+}
+
+func ping (w http.ResponseWriter, _ *http.Request)  {
+	w.WriteHeader(http.StatusOK)
 }
