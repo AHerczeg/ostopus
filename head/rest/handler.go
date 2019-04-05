@@ -7,7 +7,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"ostopus/head/config"
 	"ostopus/head/tentacles"
 	"ostopus/shared/helpers"
 	"ostopus/shared/tentacle"
@@ -40,7 +39,7 @@ func StartRouter(address string) error {
 
 func setupRouter(router *mux.Router) {
 	router.HandleFunc("/register", registerTentacle).Methods("POST")
-	router.HandleFunc("/pingResponse", pingAll).Methods("GET")
+	router.HandleFunc("/ping", pingAll).Methods("GET")
 }
 
 func registerTentacle(w http.ResponseWriter, r *http.Request) {
@@ -73,6 +72,7 @@ func pingAll(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	wg.Wait()
+	close(responses)
 
 	for response := range responses {
 		results[response.tentacle] = response.response
@@ -95,7 +95,7 @@ func sendQuery(url string, query string) []byte {
 	client := GetDefaultClient()
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		// TODO
 	}
 	defer resp.Body.Close()
 
