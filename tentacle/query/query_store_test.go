@@ -44,5 +44,3 @@ func TestGetQuery(t *testing.T) {
 	}
 }
 */
-
-

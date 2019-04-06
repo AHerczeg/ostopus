@@ -6,8 +6,8 @@ import (
 )
 
 var (
-	self		tentacle.Tentacle
-	headAddress	string
+	self        tentacle.Tentacle
+	headAddress string
 )
 
 func InitSelf(name, address string) {
@@ -19,7 +19,6 @@ func InitSelf(name, address string) {
 func GetSelf() tentacle.Tentacle {
 	return self
 }
-
 
 func GetHeadAddress() string {
 	return headAddress
