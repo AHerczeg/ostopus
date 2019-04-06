@@ -21,5 +21,4 @@ func main() {
 	//queryStore := query.NewLocalQueryStore()
 	rest.StartRouter(":7070")
 
-
 }

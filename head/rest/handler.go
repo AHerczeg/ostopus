@@ -13,10 +13,9 @@ import (
 	"sync"
 )
 
-
 type pingResponse struct {
-	tentacle 	string
-	response	bool
+	tentacle string
+	response bool
 }
 
 func MustStartRouter(address string) {
@@ -107,8 +106,8 @@ func sendQuery(url string, query string) []byte {
 	return body
 }
 
-func pingTentacle(tentacle tentacle.Tentacle, response chan <- pingResponse, wg *sync.WaitGroup) {
-	logrus.WithFields(logrus.Fields{"name": tentacle.Name,"address": tentacle.Address}).Info("Pinging tentacle")
+func pingTentacle(tentacle tentacle.Tentacle, response chan<- pingResponse, wg *sync.WaitGroup) {
+	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address}).Info("Pinging tentacle")
 	res, err := http.Get(tentacle.Address + "/ping")
 	if err != nil {
 		logrus.WithError(err)
@@ -119,7 +118,7 @@ func pingTentacle(tentacle tentacle.Tentacle, response chan <- pingResponse, wg 
 		return
 	}
 
-	logrus.WithFields(logrus.Fields{"name": tentacle.Name,"address": tentacle.Address, "code": res.StatusCode}).Info("Received ping response")
+	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address, "code": res.StatusCode}).Info("Received ping response")
 
 	pr := pingResponse{
 		tentacle: tentacle.Name,
@@ -128,6 +127,6 @@ func pingTentacle(tentacle tentacle.Tentacle, response chan <- pingResponse, wg 
 
 	response <- pr
 
-	logrus.WithFields(logrus.Fields{"name": tentacle.Name,"address": tentacle.Address}).Info("Finished pinging tentacle")
+	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address}).Info("Finished pinging tentacle")
 	wg.Done()
 }
