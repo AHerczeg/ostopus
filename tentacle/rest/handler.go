@@ -72,8 +72,6 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	respBody, _ := ioutil.ReadAll(resp.Body)
 
-
-
 	helpers.WriteResponse(w, resp.StatusCode, respBody)
 }
 
@@ -88,7 +86,7 @@ func receiveCommand(w http.ResponseWriter, r *http.Request) {
 	// TODO
 }
 
-func ping (w http.ResponseWriter, _ *http.Request)  {
+func ping(w http.ResponseWriter, _ *http.Request) {
 	logrus.Info("Receiving ping")
 	helpers.WriteResponse(w, http.StatusOK, []byte{})
 }
