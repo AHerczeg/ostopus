@@ -10,7 +10,6 @@ import (
 	"ostopus/head/tentacles"
 	"ostopus/shared/helpers"
 	"ostopus/shared/tentacle"
-	"sync"
 )
 
 type pingResponse struct {
@@ -60,25 +59,28 @@ func pingAll(w http.ResponseWriter, _ *http.Request) {
 	results := make(map[string]bool)
 	allTentacles := tentacles.Tentacles().GetAllTentacles()
 
-	logrus.WithFields(logrus.Fields{"tentacles": len(allTentacles)}).Info("Pinging all tentacles")
-
-	responses := make(chan pingResponse)
-
-	var wg sync.WaitGroup
-	wg.Add(len(allTentacles))
-
-	for _, tentacle := range allTentacles {
-		go pingTentacle(tentacle, responses, &wg)
+	// If there are no tentacles we can quit early
+	if len(allTentacles) == 0 {
+		helpers.WriteResponse(w, http.StatusOK, []byte("{}"))
+		return
 	}
 
-	wg.Wait()
-	close(responses)
+	logrus.WithFields(logrus.Fields{"tentacles": len(allTentacles)}).Info("Pinging all tentacles")
+
+	responses := make(chan pingResponse, len(allTentacles))
+
+	for _, tentacle := range allTentacles {
+		go pingTentacle(tentacle, responses)
+	}
+
+
+	for range allTentacles {
+		r := <- responses
+		results[r.tentacle] = r.response
+	}
 
 	logrus.Info("Finished pinging")
 
-	for response := range responses {
-		results[response.tentacle] = response.response
-	}
 
 	marshaledResults, err := json.Marshal(results)
 	if err != nil {
@@ -106,7 +108,7 @@ func sendQuery(url string, query string) []byte {
 	return body
 }
 
-func pingTentacle(tentacle tentacle.Tentacle, response chan<- pingResponse, wg *sync.WaitGroup) {
+func pingTentacle(tentacle tentacle.Tentacle, response chan<- pingResponse) {
 	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address}).Info("Pinging tentacle")
 	res, err := http.Get(tentacle.Address + "/ping")
 	if err != nil {
@@ -119,14 +121,10 @@ func pingTentacle(tentacle tentacle.Tentacle, response chan<- pingResponse, wg *
 	}
 
 	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address, "code": res.StatusCode}).Info("Received ping response")
-
-	pr := pingResponse{
+	response <- pingResponse{
 		tentacle: tentacle.Name,
 		response: res.StatusCode == http.StatusOK,
 	}
 
-	response <- pr
-
 	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address}).Info("Finished pinging tentacle")
-	wg.Done()
 }
