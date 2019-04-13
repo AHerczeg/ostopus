@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import { BodyWrapper } from '../../components/Styles/Styles'
-export default class Querys extends Component {
+export default class Packs extends Component {
 
   render() {
     return(
       <BodyWrapper>
-        <p>Querys</p>
+        <p>Packs</p>
       </BodyWrapper>
     );
   }

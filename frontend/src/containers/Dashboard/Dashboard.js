@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
+import { BodyWrapper } from '../../components/Styles/Styles' 
 
 export default class Dashboard extends Component {
-
     render() {
         return (
-                <div>
-                    <p>Dashboard</p>
-                </div>
+                <BodyWrapper>
+                    <p>Hello</p>
+                </BodyWrapper>
         );
     }
 }
