@@ -3,13 +3,14 @@ package main
 import (
 	"github.com/sirupsen/logrus"
 	"ostopus/tentacle/local"
+	"ostopus/tentacle/os"
 	_ "ostopus/tentacle/os"
 	"ostopus/tentacle/query"
 	"ostopus/tentacle/rest"
 )
 
 var (
-	QueryHandler *query.QueryHandler
+	QueryHandler *query.Handler
 )
 
 func main() {
@@ -17,8 +18,10 @@ func main() {
 
 	local.InitSelf("test", "http://localhost:7070")
 
-	//osHandler := os.NewOSHandler()
-	//queryStore := query.NewLocalQueryStore()
+	osHandler := os.NewOSHandler()
+	queryStore := query.NewLocalQueryStore()
+	query.InitQueryHandler(queryStore, osHandler)
+
 	rest.StartRouter(":7070")
 
 }

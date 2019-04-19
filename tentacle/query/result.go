@@ -7,20 +7,20 @@ import (
 type ResultDTO struct {
 	QueryID   string
 	DeviceID  string
-	arguments map[string]interface{}
+	Arguments map[string]interface{}
 }
 
 func (r ResultDTO) GetField(field string) interface{} {
-	return r.arguments[field]
+	return r.Arguments[field]
 }
 
 func (r ResultDTO) HasField(field string) bool {
-	_, ok := r.arguments[field]
+	_, ok := r.Arguments[field]
 	return ok
 }
 
 func (r *ResultDTO) UnmarshalArguments(rawMessage []byte) error {
-	if err := json.Unmarshal(rawMessage, &r.arguments); err != nil {
+	if err := json.Unmarshal(rawMessage, &r.Arguments); err != nil {
 		return err
 	}
 	return nil

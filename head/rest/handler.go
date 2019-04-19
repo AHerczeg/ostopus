@@ -45,9 +45,14 @@ func StartRouter(address string) error {
 
 func setupRouter(router *mux.Router) {
 	router.HandleFunc("/register", registerTentacle).Methods("POST")
+	router.HandleFunc("/remove", removeTentacle).Methods("DELETE")
 	router.HandleFunc("/ping", pingAll).Methods("GET")
 	router.HandleFunc("/query", relayQuery).Methods("POST")
+	router.NotFoundHandler = http.HandlerFunc(notFound)
+
 }
+
+
 
 func registerTentacle(w http.ResponseWriter, r *http.Request) {
 	var tentacle shared.Tentacle
@@ -65,6 +70,23 @@ func registerTentacle(w http.ResponseWriter, r *http.Request) {
 	tentacles.Tentacles().SaveTentacle(tentacle)
 	logrus.WithFields(logrus.Fields{"Name": tentacle.Name, "Address": tentacle.Address}).Info("New tentacle registered")
 	shared.WriteResponse(w, http.StatusCreated, []byte{})
+}
+
+func removeTentacle(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var request string
+	err := decoder.Decode(&request)
+	if err != nil {
+		logrus.Error(err)
+		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while reading request"))
+	}
+
+	result := tentacles.Tentacles().RemoveTentacle(request)
+	if result {
+		shared.WriteResponse(w, http.StatusOK, []byte{})
+	} else {
+		shared.WriteResponse(w, http.StatusInternalServerError, []byte{})
+	}
 }
 
 func pingAll(w http.ResponseWriter, _ *http.Request) {
@@ -114,6 +136,10 @@ func relayQuery(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logrus.WithFields(logrus.Fields{"targets": request.Targets, "query": request.Query}).Info("Relaying new query")
+
+	if !request.Query.Validate(){
+		shared.WriteResponse(w, http.StatusBadRequest, []byte("malformed query or frequency"))
+	}
 
 	marshaledQuery, err := json.Marshal(request.Query)
 	if err != nil {
@@ -168,8 +194,7 @@ func pingTentacle(tentacle shared.Tentacle, response chan<- pingResponse) {
 
 func syncQuery(query []byte, tentacle shared.Tentacle, results *sync.Map, wg *sync.WaitGroup) {
 	defer wg.Done()
-	res := sendQuery(query, tentacle.Address)
-	results.Store(tentacle.Name, res)
+	results.Store(tentacle.Name, sendQuery(query, tentacle.Address))
 }
 
 func sendQuery(query []byte, address string) string {
@@ -200,4 +225,8 @@ func marshalSyncMap(syncMap sync.Map) ([]byte, error) {
 		return true
 	})
 	return json.Marshal(tmpMap)
+}
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	shared.WriteResponse(w, http.StatusNotFound, []byte{})
 }

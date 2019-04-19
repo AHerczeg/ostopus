@@ -3,6 +3,7 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"net/url"
 	"ostopus/shared"
 	"ostopus/tentacle/local"
+	tentacleQuery "ostopus/tentacle/query"
 )
 
 func StartRouter(address string) {
@@ -76,16 +78,39 @@ func register(w http.ResponseWriter, r *http.Request) {
 }
 
 func receiveCommand(w http.ResponseWriter, r *http.Request) {
-	var tentacle shared.Tentacle
-	if err := json.NewDecoder(r.Body).Decode(&tentacle); err != nil {
+	var query shared.Query
+	if err := json.NewDecoder(r.Body).Decode(&query); err != nil {
 		logrus.Error(err)
-		http.Error(w, "error parsing command",
-			http.StatusBadRequest)
+		shared.WriteResponse(w, http.StatusBadRequest, []byte("failed to unmarshal query"))
 		return
 	}
 
-	shared.WriteResponse(w, http.StatusNotFound, []byte{})
-	// TODO
+	if query.Frequency != "" {
+		// TODO handle frequency
+	} else {
+		if !query.Validate() {
+			shared.WriteResponse(w, http.StatusBadRequest, []byte("malformed query or frequency"))
+			return
+		}
+
+		queryHandler := tentacleQuery.GetQueryHandler()
+
+		result, err := queryHandler.RunCustomQuery(query.Query)
+		fmt.Println(result)
+		if err != nil {
+			shared.WriteResponse(w, http.StatusInternalServerError, []byte(fmt.Sprintf("failed to run query. err: %v", err)))
+			return
+		}
+
+		marshaledResults, err := json.Marshal(result)
+		fmt.Println(string(marshaledResults))
+		if err != nil {
+			logrus.Error(err)
+			shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while parsing result"))
+		}
+
+		shared.WriteResponse(w, http.StatusOK, marshaledResults)
+	}
 }
 
 func ping(w http.ResponseWriter, _ *http.Request) {

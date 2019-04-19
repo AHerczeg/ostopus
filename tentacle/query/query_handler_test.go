@@ -12,12 +12,12 @@ import (
 func TestNewQueryHandler(t *testing.T) {
 	type args struct {
 		store QueryStore
-		os    os.OSHandler
+		os    os.Handler
 	}
 	tests := []struct {
 		name string
 		args args
-		want QueryHandler
+		want Handler
 	}{
 		{
 			name: "Empty handlers",
@@ -25,7 +25,7 @@ func TestNewQueryHandler(t *testing.T) {
 				store: &localQueryStore{},
 				os:    os.NewOSHandler(),
 			},
-			want: QueryHandler{queryStore: &localQueryStore{}, osHandler: os.NewOSHandler()},
+			want: Handler{queryStore: &localQueryStore{}, osHandler: os.NewOSHandler()},
 		},
 		{
 			name: "Empty handlers",
@@ -33,7 +33,7 @@ func TestNewQueryHandler(t *testing.T) {
 				store: &localQueryStore{},
 				os:    os.NewOSHandler(),
 			},
-			want: QueryHandler{queryStore: &localQueryStore{}, osHandler: os.NewOSHandler()},
+			want: Handler{queryStore: &localQueryStore{}, osHandler: os.NewOSHandler()},
 		},
 		{
 			name: "Empty handlers",
@@ -41,13 +41,13 @@ func TestNewQueryHandler(t *testing.T) {
 				store: &localQueryStore{},
 				os:    os.NewOSHandler(),
 			},
-			want: QueryHandler{queryStore: &localQueryStore{}, osHandler: os.NewOSHandler()},
+			want: Handler{queryStore: &localQueryStore{}, osHandler: os.NewOSHandler()},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewQueryHandler(tt.args.store, tt.args.os); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewQueryHandler() = %v, want %v", got, tt.want)
+			if got := InitQueryHandler(tt.args.store, tt.args.os); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("InitQueryHandler() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -56,7 +56,7 @@ func TestNewQueryHandler(t *testing.T) {
 func TestQueryHandler_RunCustomQuery(t *testing.T) {
 	type fields struct {
 		queryStore QueryStore
-		osHandler  os.OSHandler
+		osHandler  os.Handler
 	}
 	type args struct {
 		query string
@@ -72,7 +72,7 @@ func TestQueryHandler_RunCustomQuery(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qh := QueryHandler{
+			qh := Handler{
 				queryStore: tt.fields.queryStore,
 				osHandler:  tt.fields.osHandler,
 			}
@@ -143,7 +143,7 @@ func Test_cleanJSON(t *testing.T) {
 func TestQueryHandler_RunSavedQuery(t *testing.T) {
 	type fields struct {
 		queryStore QueryStore
-		osHandler  os.OSHandler
+		osHandler  os.Handler
 	}
 	type args struct {
 		name string
@@ -159,7 +159,7 @@ func TestQueryHandler_RunSavedQuery(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qh := QueryHandler{
+			qh := Handler{
 				queryStore: tt.fields.queryStore,
 				osHandler:  tt.fields.osHandler,
 			}
@@ -178,7 +178,7 @@ func TestQueryHandler_RunSavedQuery(t *testing.T) {
 func TestQueryHandler_fetchQuery(t *testing.T) {
 	type fields struct {
 		queryStore QueryStore
-		osHandler  os.OSHandler
+		osHandler  os.Handler
 	}
 	type args struct {
 		name string
@@ -194,7 +194,7 @@ func TestQueryHandler_fetchQuery(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qh := QueryHandler{
+			qh := Handler{
 				queryStore: tt.fields.queryStore,
 				osHandler:  tt.fields.osHandler,
 			}
@@ -213,7 +213,7 @@ func TestQueryHandler_fetchQuery(t *testing.T) {
 func TestQueryHandler_executeQuery(t *testing.T) {
 	type fields struct {
 		queryStore QueryStore
-		osHandler  os.OSHandler
+		osHandler  os.Handler
 	}
 	type args struct {
 		query string
@@ -229,7 +229,7 @@ func TestQueryHandler_executeQuery(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qh := QueryHandler{
+			qh := Handler{
 				queryStore: tt.fields.queryStore,
 				osHandler:  tt.fields.osHandler,
 			}

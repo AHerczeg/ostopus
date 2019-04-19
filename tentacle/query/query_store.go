@@ -21,7 +21,7 @@ type localQueryStore struct {
 	queries map[string]string
 }
 
-func NewLocalQueryStore() localQueryStore {
+func NewLocalQueryStore() *localQueryStore {
 	var qs localQueryStore
 	qs.queries = make(map[string]string)
 
@@ -29,7 +29,7 @@ func NewLocalQueryStore() localQueryStore {
 		qs.AddQueries(q)
 	}
 
-	return qs
+	return &qs
 }
 
 func (qs *localQueryStore) GetQuery(name string) (string, bool) {

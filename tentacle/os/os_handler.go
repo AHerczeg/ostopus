@@ -5,14 +5,14 @@ import (
 	"os/exec"
 )
 
-type OSHandler interface {
+type Handler interface {
 	Execute(string) (bytes.Buffer, error)
 }
 
 type stdOSHandler struct {
 }
 
-func NewOSHandler() OSHandler {
+func NewOSHandler() Handler {
 	return stdOSHandler{}
 }
 
