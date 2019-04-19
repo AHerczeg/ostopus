@@ -8,8 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"ostopus/shared/helpers"
-	"ostopus/shared/tentacle"
+	"ostopus/shared"
 	"ostopus/tentacle/local"
 )
 
@@ -25,10 +24,11 @@ func setupRouter(router *mux.Router) {
 	router.HandleFunc("/query", receiveCommand).Methods("POST")
 	router.HandleFunc("/register", register).Methods("POST")
 	router.HandleFunc("/ping", ping).Methods("GET")
+	router.NotFoundHandler = http.HandlerFunc(notFound)
 }
 
 func register(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("Registering tentacle...")
+	logrus.Info("Registering tentacle")
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Error(err)
@@ -38,7 +38,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	headAddress := string(body)
 	if _, err = url.ParseRequestURI(headAddress); err != nil {
 		logrus.Error(err)
-		helpers.WriteResponse(w, http.StatusBadRequest, []byte("error parsing head address"))
+		shared.WriteResponse(w, http.StatusBadRequest, []byte("error parsing head address"))
 		return
 	}
 
@@ -61,7 +61,7 @@ func register(w http.ResponseWriter, r *http.Request) {
 	resp, err := client.Do(req)
 	if err != nil {
 		logrus.Error(err)
-		helpers.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while registering tentacle"))
+		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while registering tentacle"))
 		return
 	}
 	defer resp.Body.Close()
@@ -72,21 +72,28 @@ func register(w http.ResponseWriter, r *http.Request) {
 
 	respBody, _ := ioutil.ReadAll(resp.Body)
 
-	helpers.WriteResponse(w, resp.StatusCode, respBody)
+	shared.WriteResponse(w, resp.StatusCode, respBody)
 }
 
 func receiveCommand(w http.ResponseWriter, r *http.Request) {
-	var tentacle tentacle.Tentacle
+	var tentacle shared.Tentacle
 	if err := json.NewDecoder(r.Body).Decode(&tentacle); err != nil {
 		logrus.Error(err)
 		http.Error(w, "error parsing command",
 			http.StatusBadRequest)
 		return
 	}
+
+	shared.WriteResponse(w, http.StatusNotFound, []byte{})
 	// TODO
 }
 
 func ping(w http.ResponseWriter, _ *http.Request) {
 	logrus.Info("Receiving ping")
-	helpers.WriteResponse(w, http.StatusOK, []byte{})
+	shared.WriteResponse(w, http.StatusOK, []byte{})
 }
+
+func notFound(w http.ResponseWriter, r *http.Request) {
+	shared.WriteResponse(w, http.StatusNotFound, []byte{})
+}
+

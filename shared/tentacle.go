@@ -1,4 +1,4 @@
-package tentacle
+package shared
 
 type Tentacle struct {
 	Name    string `json:"name"`

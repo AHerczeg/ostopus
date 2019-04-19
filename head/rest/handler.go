@@ -3,18 +3,24 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"ostopus/head/tentacles"
-	"ostopus/shared/helpers"
-	"ostopus/shared/tentacle"
+	"ostopus/shared"
+	"sync"
 )
 
 type pingResponse struct {
 	tentacle string
 	response bool
+}
+
+type queryRequest struct {
+	Targets []string
+	Query   shared.Query
 }
 
 func MustStartRouter(address string) {
@@ -28,31 +34,37 @@ func StartRouter(address string) error {
 	router := mux.NewRouter()
 	setupRouter(router)
 	logrus.Info("Listening and serving HTTP", "Address", address)
+
 	if err := http.ListenAndServe(address, router); err != nil {
 		logrus.WithError(err)
 		return err
 	}
+
 	return nil
 }
 
 func setupRouter(router *mux.Router) {
 	router.HandleFunc("/register", registerTentacle).Methods("POST")
 	router.HandleFunc("/ping", pingAll).Methods("GET")
+	router.HandleFunc("/query", relayQuery).Methods("POST")
 }
 
 func registerTentacle(w http.ResponseWriter, r *http.Request) {
-	var tentacle tentacle.Tentacle
+	var tentacle shared.Tentacle
+
 	if err := json.NewDecoder(r.Body).Decode(&tentacle); err != nil {
-		helpers.WriteResponse(w, http.StatusBadRequest, []byte("failed to parse tentacle"))
+		shared.WriteResponse(w, http.StatusBadRequest, []byte("failed to parse tentacle"))
 		return
 	}
+
 	if tentacles.Tentacles().HasTentacle(tentacle.Name) {
-		helpers.WriteResponse(w, http.StatusConflict, []byte("name already in use"))
+		shared.WriteResponse(w, http.StatusConflict, []byte("name already in use"))
 		return
 	}
+
 	tentacles.Tentacles().SaveTentacle(tentacle)
 	logrus.WithFields(logrus.Fields{"Name": tentacle.Name, "Address": tentacle.Address}).Info("New tentacle registered")
-	helpers.WriteResponse(w, http.StatusCreated, []byte{})
+	shared.WriteResponse(w, http.StatusCreated, []byte{})
 }
 
 func pingAll(w http.ResponseWriter, _ *http.Request) {
@@ -61,7 +73,7 @@ func pingAll(w http.ResponseWriter, _ *http.Request) {
 
 	// If there are no tentacles we can quit early
 	if len(allTentacles) == 0 {
-		helpers.WriteResponse(w, http.StatusOK, []byte("{}"))
+		shared.WriteResponse(w, http.StatusOK, []byte("{}"))
 		return
 	}
 
@@ -83,32 +95,57 @@ func pingAll(w http.ResponseWriter, _ *http.Request) {
 
 
 	marshaledResults, err := json.Marshal(results)
+
 	if err != nil {
 		logrus.Error(err)
-		helpers.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while preparing response"))
+		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while preparing response"))
 	}
-	helpers.WriteResponse(w, http.StatusOK, marshaledResults)
+
+	shared.WriteResponse(w, http.StatusOK, marshaledResults)
 }
 
-func sendQuery(url string, query string) []byte {
-	marshaledCommand, err := json.Marshal(query)
+func relayQuery(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var request queryRequest
+	err := decoder.Decode(&request)
 	if err != nil {
-		// TODO
+		logrus.Error(err)
+		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while reading request"))
 	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(marshaledCommand))
-	client := GetDefaultClient()
-	resp, err := client.Do(req)
+
+	logrus.WithFields(logrus.Fields{"targets": request.Targets, "query": request.Query}).Info("Relaying new query")
+
+	marshaledQuery, err := json.Marshal(request.Query)
 	if err != nil {
-		// TODO
+		logrus.Error(err)
+		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while parsing query"))
 	}
-	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	var results sync.Map
+	var wg sync.WaitGroup
 
-	return body
+	for _, target := range request.Targets {
+		if tentacle, ok := tentacles.Tentacles().GetTentacle(target); ok {
+			wg.Add(1)
+			go syncQuery(marshaledQuery, tentacle, &results, &wg)
+		} else {
+			results.Store(target, "unknown target")
+		}
+	}
+
+	wg.Wait()
+
+	marshaledMap, err := marshalSyncMap(results)
+	if err != nil {
+		logrus.Error(err)
+		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while parsing results"))
+	}
+
+	shared.WriteResponse(w, http.StatusOK, marshaledMap)
+
 }
 
-func pingTentacle(tentacle tentacle.Tentacle, response chan<- pingResponse) {
+func pingTentacle(tentacle shared.Tentacle, response chan<- pingResponse) {
 	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address}).Info("Pinging tentacle")
 	res, err := http.Get(tentacle.Address + "/ping")
 	if err != nil {
@@ -127,4 +164,40 @@ func pingTentacle(tentacle tentacle.Tentacle, response chan<- pingResponse) {
 	}
 
 	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address}).Info("Finished pinging tentacle")
+}
+
+func syncQuery(query []byte, tentacle shared.Tentacle, results *sync.Map, wg *sync.WaitGroup) {
+	defer wg.Done()
+	res := sendQuery(query, tentacle.Address)
+	results.Store(tentacle.Name, res)
+}
+
+func sendQuery(query []byte, address string) string {
+	req, err := http.NewRequest("POST", address + "/query", bytes.NewBuffer(query))
+	client := GetDefaultClient()
+	resp, err := client.Do(req)
+	defer resp.Body.Close()
+	if err != nil {
+		return  "error while processing response"
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Sprintf("failed query. Code %d", resp.StatusCode)
+	}
+
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "error while reading response"
+	}
+	return string(bodyBytes)
+
+}
+
+func marshalSyncMap(syncMap sync.Map) ([]byte, error) {
+	tmpMap := make(map[string]string)
+	syncMap.Range(func(k, v interface{}) bool {
+		tmpMap[k.(string)] = v.(string)
+		return true
+	})
+	return json.Marshal(tmpMap)
 }

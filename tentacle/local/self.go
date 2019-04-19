@@ -2,11 +2,11 @@ package local
 
 import (
 	"github.com/sirupsen/logrus"
-	"ostopus/shared/tentacle"
+	"ostopus/shared"
 )
 
 var (
-	self        tentacle.Tentacle
+	self        shared.Tentacle
 	headAddress string
 )
 
@@ -16,7 +16,7 @@ func InitSelf(name, address string) {
 	logrus.WithFields(logrus.Fields{"name": name, "address": address}).Info("Tentacle initialised")
 }
 
-func GetSelf() tentacle.Tentacle {
+func GetSelf() shared.Tentacle {
 	return self
 }
 
