@@ -5,8 +5,6 @@ import (
 )
 
 type ResultDTO struct {
-	QueryID   string
-	DeviceID  string
 	Arguments map[string]interface{}
 }
 
