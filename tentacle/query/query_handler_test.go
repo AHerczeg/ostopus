@@ -68,7 +68,7 @@ func TestHandler_RunSavedQuery(t *testing.T) {
 	}
 	type mocks struct {
 		fetchQueryQuery string
-		fetchQueryError	error
+		fetchQueryBool	bool
 		executeResponse	bytes.Buffer
 		executeError	error
 	}
@@ -80,22 +80,73 @@ func TestHandler_RunSavedQuery(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "",
+			name: "Empty query",
 			args: args{name: ""},
 			mocks:	mocks{
 				fetchQueryQuery: "",
-				fetchQueryError: fmt.Errorf(""),
-				executeResponse: bytes.Buffer{},
-				executeError: fmt.Errorf(""),
+				fetchQueryBool: false,
 			},
 			want: ResultDTO{},
+			wantErr: true,
+		},
+		{
+			name: "Normal query not saved to the query store",
+			args: args{name: "Find_Containers"},
+			mocks:	mocks{
+				fetchQueryQuery: "",
+				fetchQueryBool: false,
+			},
+			want: ResultDTO{},
+			wantErr: true,
+		},
+		{
+			name: "Normal query, saved to the store",
+			args: args{name: "kernel_info"},
+			mocks:	mocks{
+				fetchQueryQuery: "SELECT * FROM kernel_info;",
+				fetchQueryBool: true,
+				executeResponse: *bytes.NewBuffer([]byte(`[{"arguments":"","device":"1","path":"/System/Library/","version":"1.1.0"}]`)),
+				executeError: nil,
+			},
+			want: ResultDTO{
+				Arguments: map[string]interface{}{
+					"arguments": "",
+					"device"   : "1",
+					"path"	   : "/System/Library/",
+					"version"  : "1.1.0",
+				},
+			},
 			wantErr: false,
+		},
+		{
+			name: "Faulty query, saved to the store",
+			args: args{name: "kernel_info"},
+			mocks:	mocks{
+				fetchQueryQuery: "SELECT * OH NO THIS IS NOT GOOD FROM kernel_info;",
+				fetchQueryBool: true,
+				executeResponse: bytes.Buffer{},
+				executeError: fmt.Errorf("unexpected OS error"),
+			},
+			want: ResultDTO{},
+			wantErr: true,
+		},
+		{
+			name: "Normal query, saved to the store, result is not correct JSON",
+			args: args{name: "kernel_info"},
+			mocks:	mocks{
+				fetchQueryQuery: "SELECT * OH NO THIS IS NOT GOOD FROM kernel_info;",
+				fetchQueryBool: true,
+				executeResponse: *bytes.NewBuffer([]byte(`Invalid:JSON:result`)),
+				executeError: nil,
+			},
+			want: ResultDTO{},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			qs := MockQueryStore{}
-			qs.On("GetQuery", mock.AnythingOfType("string")).Return(tt.mocks.fetchQueryQuery, tt.mocks.fetchQueryError)
+			qs.On("GetQuery", mock.AnythingOfType("string")).Return(tt.mocks.fetchQueryQuery, tt.mocks.fetchQueryBool)
 
 			oh := os.MockOsHandler{}
 			oh.On("Execute", mock.AnythingOfType("string")).Return(tt.mocks.executeResponse, tt.mocks.executeError)
