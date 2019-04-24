@@ -4,89 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/stretchr/testify/mock"
 	"ostopus/tentacle/os"
 	"reflect"
 	"testing"
 )
-
-func TestNewQueryHandler(t *testing.T) {
-	type args struct {
-		store QueryStore
-		os    os.Handler
-	}
-	tests := []struct {
-		name string
-		args args
-		want Handler
-	}{
-		{
-			name: "Empty handlers",
-			args: args{
-				store: &localQueryStore{},
-				os:    os.NewOSHandler(),
-			},
-			want: Handler{queryStore: &localQueryStore{}, osHandler: os.NewOSHandler()},
-		},
-		{
-			name: "Empty handlers",
-			args: args{
-				store: &localQueryStore{},
-				os:    os.NewOSHandler(),
-			},
-			want: Handler{queryStore: &localQueryStore{}, osHandler: os.NewOSHandler()},
-		},
-		{
-			name: "Empty handlers",
-			args: args{
-				store: &localQueryStore{},
-				os:    os.NewOSHandler(),
-			},
-			want: Handler{queryStore: &localQueryStore{}, osHandler: os.NewOSHandler()},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := InitQueryHandler(tt.args.store, tt.args.os); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("InitQueryHandler() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestQueryHandler_RunCustomQuery(t *testing.T) {
-	type fields struct {
-		queryStore QueryStore
-		osHandler  os.Handler
-	}
-	type args struct {
-		query string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    ResultDTO
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			qh := Handler{
-				queryStore: tt.fields.queryStore,
-				osHandler:  tt.fields.osHandler,
-			}
-			got, err := qh.RunCustomQuery(tt.args.query)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("QueryHandler.RunCustomQuery() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("QueryHandler.RunCustomQuery() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func Test_cleanJSON(t *testing.T) {
 	type args struct {
@@ -140,107 +62,61 @@ func Test_cleanJSON(t *testing.T) {
 	}
 }
 
-func TestQueryHandler_RunSavedQuery(t *testing.T) {
-	type fields struct {
-		queryStore QueryStore
-		osHandler  os.Handler
-	}
+func TestHandler_RunSavedQuery(t *testing.T) {
 	type args struct {
 		name string
 	}
+	type mocks struct {
+		fetchQueryQuery string
+		fetchQueryError	error
+		executeResponse	bytes.Buffer
+		executeError	error
+	}
 	tests := []struct {
 		name    string
-		fields  fields
 		args    args
+		mocks 	mocks
 		want    ResultDTO
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			name: "",
+			args: args{name: ""},
+			mocks:	mocks{
+				fetchQueryQuery: "",
+				fetchQueryError: fmt.Errorf(""),
+				executeResponse: bytes.Buffer{},
+				executeError: fmt.Errorf(""),
+			},
+			want: ResultDTO{},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			qh := Handler{
-				queryStore: tt.fields.queryStore,
-				osHandler:  tt.fields.osHandler,
+			qs := MockQueryStore{}
+			qs.On("GetQuery", mock.AnythingOfType("string")).Return(tt.mocks.fetchQueryQuery, tt.mocks.fetchQueryError)
+
+			oh := os.MockOsHandler{}
+			oh.On("Execute", mock.AnythingOfType("string")).Return(tt.mocks.executeResponse, tt.mocks.executeError)
+
+			qh := StdHandler{
+				queryStore: &qs,
+				osHandler:  &oh,
 			}
+
 			got, err := qh.RunSavedQuery(tt.args.name)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("QueryHandler.RunSavedQuery() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("StdHandler.RunSavedQuery() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("QueryHandler.RunSavedQuery() = %v, want %v", got, tt.want)
+				t.Errorf("StdHandler.RunSavedQuery() = %v, want %v", got, tt.want)
 			}
 		})
 	}
 }
 
-func TestQueryHandler_fetchQuery(t *testing.T) {
-	type fields struct {
-		queryStore QueryStore
-		osHandler  os.Handler
-	}
-	type args struct {
-		name string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    string
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			qh := Handler{
-				queryStore: tt.fields.queryStore,
-				osHandler:  tt.fields.osHandler,
-			}
-			got, err := qh.fetchQuery(tt.args.name)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("QueryHandler.fetchQuery() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("QueryHandler.fetchQuery() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
-func TestQueryHandler_executeQuery(t *testing.T) {
-	type fields struct {
-		queryStore QueryStore
-		osHandler  os.Handler
-	}
-	type args struct {
-		query string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    ResultDTO
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			qh := Handler{
-				queryStore: tt.fields.queryStore,
-				osHandler:  tt.fields.osHandler,
-			}
-			got, err := qh.executeQuery(tt.args.query)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("QueryHandler.executeQuery() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("QueryHandler.executeQuery() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+
+

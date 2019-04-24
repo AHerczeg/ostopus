@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	QueryHandler *query.Handler
+	QueryHandler *query.StdHandler
 )
 
 func main() {

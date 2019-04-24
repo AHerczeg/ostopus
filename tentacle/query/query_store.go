@@ -2,6 +2,7 @@ package query
 
 import (
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/mock"
 )
 
 var (
@@ -58,4 +59,27 @@ func (qs *localQueryStore) AddQuery(name, query string) {
 
 func Foo(i int) int {
 	return i
+}
+
+
+type MockQueryStore struct {
+	mock.Mock
+}
+
+func (m *MockQueryStore) GetQuery(name string) (string, bool) {
+	args := m.Called(name)
+	return args.String(0), args.Bool(1)
+}
+
+func (m *MockQueryStore) HasQuery(name string) bool {
+	args := m.Called(name)
+	return args.Bool(0)
+}
+
+func (m *MockQueryStore) AddQueries(queries map[string]string) {
+	m.Called(queries)
+}
+
+func (m *MockQueryStore) AddQuery(name, query string) {
+	m.Called(name, query)
 }

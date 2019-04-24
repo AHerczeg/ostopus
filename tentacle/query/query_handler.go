@@ -5,29 +5,37 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/mock"
 	"ostopus/tentacle/os"
 	"regexp"
 )
 
 var (
-	queryHandler Handler
-	jsonRegex = regexp.MustCompile("{\\s*(\"[^\"]*\":\"[^\"]*\"\\s*)+(,\\s*(\"[^\"]*\":\"[^\"]*\")\\s*)*}")
+	queryHandler StdHandler
+	jsonRegex     = regexp.MustCompile("{\\s*(\"[^\"]*\":\"[^\"]*\"\\s*)+(,\\s*(\"[^\"]*\":\"[^\"]*\")\\s*)*}")
 )
 
-type Handler struct {
+type Handler interface {
+	RunSavedQuery(string) (ResultDTO, error)
+	RunCustomQuery(string) (ResultDTO, error)
+	fetchQuery(string) (string, error)
+	executeQuery(string) (ResultDTO, error)
+}
+
+type StdHandler struct {
 	queryStore QueryStore
 	osHandler  os.Handler
 }
 
 func InitQueryHandler(store QueryStore, os os.Handler) {
-	queryHandler = Handler{queryStore: store, osHandler: os}
+	queryHandler = StdHandler{queryStore: store, osHandler: os}
 }
 
-func GetQueryHandler() *Handler {
+func GetQueryHandler() *StdHandler {
 	return &queryHandler
 }
 
-func (qh Handler) RunSavedQuery(name string) (ResultDTO, error) {
+func (qh StdHandler) RunSavedQuery(name string) (ResultDTO, error) {
 	logrus.Info("Running query: ", name)
 	query, err := qh.fetchQuery(name)
 	if err != nil {
@@ -36,12 +44,12 @@ func (qh Handler) RunSavedQuery(name string) (ResultDTO, error) {
 	return qh.executeQuery(query)
 }
 
-func (qh Handler) RunCustomQuery(query string) (ResultDTO, error) {
+func (qh StdHandler) RunCustomQuery(query string) (ResultDTO, error) {
 	logrus.Info("Running query: ", query)
 	return qh.executeQuery(query)
 }
 
-func (qh Handler) fetchQuery(name string) (string, error) {
+func (qh StdHandler) fetchQuery(name string) (string, error) {
 	if query, ok := qh.queryStore.GetQuery(name); !ok {
 		return "", fmt.Errorf("missing query")
 	} else {
@@ -49,7 +57,7 @@ func (qh Handler) fetchQuery(name string) (string, error) {
 	}
 }
 
-func (qh Handler) executeQuery(query string) (ResultDTO, error) {
+func (qh StdHandler) executeQuery(query string) (ResultDTO, error) {
 	response, err := qh.osHandler.Execute(query)
 	if err != nil {
 		return ResultDTO{}, err
@@ -69,4 +77,29 @@ func cleanJSON(out bytes.Buffer) []byte {
 		return []byte{}
 	}
 	return cleanedJSON
+}
+
+
+type MockQueryHandler struct {
+	mock.Mock
+}
+
+func (mq *MockQueryHandler) RunSavedQuery(name string) (ResultDTO, error) {
+	args := mq.Called(name)
+	return args.Get(0).(ResultDTO), args.Error(1)
+}
+
+func (mq *MockQueryHandler) RunCustomQuery(query string) (ResultDTO, error) {
+	args := mq.Called(query)
+	return args.Get(0).(ResultDTO), args.Error(1)
+}
+
+func (mq *MockQueryHandler) fetchQuery(name string) (string, error) {
+	args := mq.Called(name)
+	return args.String(0), args.Error(1)
+}
+
+func (mq *MockQueryHandler) executeQuery(query string) (ResultDTO, error) {
+	args := mq.Called(query)
+	return args.Get(0).(ResultDTO), args.Error(1)
 }
