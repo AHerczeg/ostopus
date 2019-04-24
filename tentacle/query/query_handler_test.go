@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/mock"
 	"ostopus/tentacle/os"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/mock"
 )
 
 func Test_cleanJSON(t *testing.T) {
@@ -68,52 +69,52 @@ func TestHandler_RunSavedQuery(t *testing.T) {
 	}
 	type mocks struct {
 		fetchQueryQuery string
-		fetchQueryBool	bool
-		executeResponse	bytes.Buffer
-		executeError	error
+		fetchQueryBool  bool
+		executeResponse bytes.Buffer
+		executeError    error
 	}
 	tests := []struct {
 		name    string
 		args    args
-		mocks 	mocks
+		mocks   mocks
 		want    ResultDTO
 		wantErr bool
 	}{
 		{
 			name: "Empty query",
 			args: args{name: ""},
-			mocks:	mocks{
+			mocks: mocks{
 				fetchQueryQuery: "",
-				fetchQueryBool: false,
+				fetchQueryBool:  false,
 			},
-			want: ResultDTO{},
+			want:    ResultDTO{},
 			wantErr: true,
 		},
 		{
 			name: "Normal query not saved to the query store",
 			args: args{name: "Find_Containers"},
-			mocks:	mocks{
+			mocks: mocks{
 				fetchQueryQuery: "",
-				fetchQueryBool: false,
+				fetchQueryBool:  false,
 			},
-			want: ResultDTO{},
+			want:    ResultDTO{},
 			wantErr: true,
 		},
 		{
 			name: "Normal query, saved to the store",
 			args: args{name: "kernel_info"},
-			mocks:	mocks{
+			mocks: mocks{
 				fetchQueryQuery: "SELECT * FROM kernel_info;",
-				fetchQueryBool: true,
+				fetchQueryBool:  true,
 				executeResponse: *bytes.NewBuffer([]byte(`[{"arguments":"","device":"1","path":"/System/Library/","version":"1.1.0"}]`)),
-				executeError: nil,
+				executeError:    nil,
 			},
 			want: ResultDTO{
 				Arguments: map[string]interface{}{
 					"arguments": "",
-					"device"   : "1",
-					"path"	   : "/System/Library/",
-					"version"  : "1.1.0",
+					"device":    "1",
+					"path":      "/System/Library/",
+					"version":   "1.1.0",
 				},
 			},
 			wantErr: false,
@@ -121,25 +122,25 @@ func TestHandler_RunSavedQuery(t *testing.T) {
 		{
 			name: "Faulty query, saved to the store",
 			args: args{name: "kernel_info"},
-			mocks:	mocks{
+			mocks: mocks{
 				fetchQueryQuery: "SELECT * OH NO THIS IS NOT GOOD FROM kernel_info;",
-				fetchQueryBool: true,
-				executeResponse: bytes.Buffer{},
-				executeError: fmt.Errorf("unexpected OS error"),
+				fetchQueryBool:  true,
+				executeResponse: *bytes.NewBuffer([]byte(`[]`)),
+				executeError:    nil,
 			},
-			want: ResultDTO{},
+			want:    ResultDTO{},
 			wantErr: true,
 		},
 		{
 			name: "Normal query, saved to the store, result is not correct JSON",
 			args: args{name: "kernel_info"},
-			mocks:	mocks{
-				fetchQueryQuery: "SELECT * OH NO THIS IS NOT GOOD FROM kernel_info;",
-				fetchQueryBool: true,
+			mocks: mocks{
+				fetchQueryQuery: "SELECT * FROM kernel_info;",
+				fetchQueryBool:  true,
 				executeResponse: *bytes.NewBuffer([]byte(`Invalid:JSON:result`)),
-				executeError: nil,
+				executeError:    nil,
 			},
-			want: ResultDTO{},
+			want:    ResultDTO{},
 			wantErr: true,
 		},
 	}
@@ -168,6 +169,91 @@ func TestHandler_RunSavedQuery(t *testing.T) {
 	}
 }
 
+func TestStdHandler_RunCustomQuery(t *testing.T) {
+	type args struct {
+		query string
+	}
+	type mocks struct {
+		fetchQueryQuery string
+		fetchQueryBool  bool
+		executeResponse bytes.Buffer
+		executeError    error
+	}
+	tests := []struct {
+		name    string
+		args    args
+		mocks   mocks
+		want    ResultDTO
+		wantErr bool
+	}{
+		{
+			name: "Empty query",
+			args: args{query: ""},
+			mocks: mocks{
+				executeResponse: bytes.Buffer{},
+				executeError:    nil,
+			},
+			want:    ResultDTO{},
+			wantErr: true,
+		},
+		{
+			name: "Normal query",
+			args: args{query: "SELECT * FROM kernel_info;"},
+			mocks: mocks{
+				executeResponse: *bytes.NewBuffer([]byte(`[{"arguments":"","device":"1","path":"/System/Library/","version":"1.1.0"}]`)),
+				executeError:    nil,
+			},
+			want: ResultDTO{
+				Arguments: map[string]interface{}{
+					"arguments": "",
+					"device":    "1",
+					"path":      "/System/Library/",
+					"version":   "1.1.0",
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "Faulty query",
+			args: args{query: "SELECT * OH NO THIS IS NOT GOOD FROM kernel_info;"},
+			mocks: mocks{
+				executeResponse: *bytes.NewBuffer([]byte(`[]`)),
+				executeError:    nil,
+			},
+			want:    ResultDTO{},
+			wantErr: true,
+		},
+		{
+			name: "Normal query, result is not correct JSON",
+			args: args{query: "SELECT * FROM kernel_info;"},
+			mocks: mocks{
+				executeResponse: *bytes.NewBuffer([]byte(`Invalid:JSON:result`)),
+				executeError:    nil,
+			},
+			want:    ResultDTO{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qs := MockQueryStore{}
 
+			oh := os.MockOsHandler{}
+			oh.On("Execute", mock.AnythingOfType("string")).Return(tt.mocks.executeResponse, tt.mocks.executeError)
 
+			qh := StdHandler{
+				queryStore: &qs,
+				osHandler:  &oh,
+			}
 
+			got, err := qh.RunCustomQuery(tt.args.query)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("StdHandler.RunCustomQuery() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("StdHandler.RunCustomQuery() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

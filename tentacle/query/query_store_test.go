@@ -6,25 +6,25 @@ func TestGetQuery(t *testing.T) {
 		option string
 	}
 	tests := []struct {
-		name  string
+		query  string
 		args  args
 		want  string
 		want1 bool
 	}{
 		0: {
-			name:  "has kernel_info",
+			query:  "has kernel_info",
 			args:  args{option: "kernel_info"},
 			want:  "SELECT * FROM kernel_info;",
 			want1: true,
 		},
 		1: {
-			name:  "typo in kernel_info",
+			query:  "typo in kernel_info",
 			args:  args{option: "kerel_info"},
 			want:  "",
 			want1: false,
 		},
 		2: {
-			name:  "unknown query",
+			query:  "unknown query",
 			args:  args{option: "foobar"},
 			want:  "",
 			want1: false,
@@ -32,7 +32,7 @@ func TestGetQuery(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+		t.Run(tt.query, func(t *testing.T) {
 			got, got1 := GetQuery(tt.args.option)
 			if got != tt.want {
 				t.Errorf("GetQuery() got = %v, want %v", got, tt.want)
