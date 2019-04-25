@@ -1,5 +1,9 @@
 package query
 
+import (
+	"testing"
+)
+
 /*
 func TestGetQuery(t *testing.T) {
 	type args struct {
@@ -44,3 +48,44 @@ func TestGetQuery(t *testing.T) {
 	}
 }
 */
+
+func Test_localQueryStore_GetQuery(t *testing.T) {
+	type fields struct {
+		queries map[string]string
+	}
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+		want1  bool
+	}{
+		{
+			name: "Nil queries, empty name",
+			fields:fields{
+				queries: nil,
+			},
+			args: args{name: ""},
+			want: "",
+			want1: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qs := &localQueryStore{
+				queries: tt.fields.queries,
+			}
+			got, got1 := qs.GetQuery(tt.args.name)
+			if got != tt.want {
+				t.Errorf("localQueryStore.GetQuery() got = %v, want %v", got, tt.want)
+			}
+			if got1 != tt.want1 {
+				t.Errorf("localQueryStore.GetQuery() got1 = %v, want %v", got1, tt.want1)
+			}
+		})
+	}
+}
+
