@@ -12,7 +12,7 @@ import (
 
 var (
 	queryHandler StdHandler
-	jsonRegex     = regexp.MustCompile("{\\s*(\"[^\"]*\":\"[^\"]*\"\\s*)+(,\\s*(\"[^\"]*\":\"[^\"]*\")\\s*)*}")
+	jsonRegex    = regexp.MustCompile("{\\s*(\"[^\"]*\":\"[^\"]*\"\\s*)+(,\\s*(\"[^\"]*\":\"[^\"]*\")\\s*)*}")
 )
 
 type Handler interface {
@@ -78,7 +78,6 @@ func cleanJSON(out bytes.Buffer) []byte {
 	}
 	return cleanedJSON
 }
-
 
 /** Mocks **/
 

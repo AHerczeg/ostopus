@@ -322,7 +322,7 @@ func Test_localQueryStore_AddQuery(t *testing.T) {
 				queries: nil,
 			},
 			args: args{
-				name: "foo",
+				name:  "foo",
 				query: "bar",
 			},
 			want: nil,
@@ -335,7 +335,7 @@ func Test_localQueryStore_AddQuery(t *testing.T) {
 				},
 			},
 			args: args{
-				name: "new",
+				name:  "new",
 				query: "query",
 			},
 			want: map[string]string{"foo": "bar", "new": "query"},
@@ -348,7 +348,7 @@ func Test_localQueryStore_AddQuery(t *testing.T) {
 				},
 			},
 			args: args{
-				name: "foo",
+				name:  "foo",
 				query: "bar",
 			},
 			want: map[string]string{"foo": "bar"},
@@ -366,5 +366,3 @@ func Test_localQueryStore_AddQuery(t *testing.T) {
 		})
 	}
 }
-
-

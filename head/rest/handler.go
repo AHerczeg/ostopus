@@ -52,8 +52,6 @@ func setupRouter(router *mux.Router) {
 
 }
 
-
-
 func registerTentacle(w http.ResponseWriter, r *http.Request) {
 	var tentacle shared.Tentacle
 
@@ -107,14 +105,12 @@ func pingAll(w http.ResponseWriter, _ *http.Request) {
 		go pingTentacle(tentacle, responses)
 	}
 
-
 	for range allTentacles {
-		r := <- responses
+		r := <-responses
 		results[r.tentacle] = r.response
 	}
 
 	logrus.Info("Finished pinging")
-
 
 	marshaledResults, err := json.Marshal(results)
 
@@ -137,7 +133,7 @@ func relayQuery(w http.ResponseWriter, r *http.Request) {
 
 	logrus.WithFields(logrus.Fields{"targets": request.Targets, "query": request.Query}).Info("Relaying new query")
 
-	if !request.Query.Validate(){
+	if !request.Query.Validate() {
 		shared.WriteResponse(w, http.StatusBadRequest, []byte("malformed query or frequency"))
 	}
 
@@ -198,12 +194,12 @@ func syncQuery(query []byte, tentacle shared.Tentacle, results *sync.Map, wg *sy
 }
 
 func sendQuery(query []byte, address string) string {
-	req, err := http.NewRequest("POST", address + "/query", bytes.NewBuffer(query))
+	req, err := http.NewRequest("POST", address+"/query", bytes.NewBuffer(query))
 	client := GetDefaultClient()
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
-		return  "error while processing response"
+		return "error while processing response"
 	}
 
 	if resp.StatusCode != http.StatusOK {

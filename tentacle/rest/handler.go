@@ -121,4 +121,3 @@ func ping(w http.ResponseWriter, _ *http.Request) {
 func notFound(w http.ResponseWriter, r *http.Request) {
 	shared.WriteResponse(w, http.StatusNotFound, []byte{})
 }
-

@@ -28,12 +28,11 @@ func (oh stdOSHandler) Execute(query string) (bytes.Buffer, error) {
 	return out, nil
 }
 
-
 type MockOsHandler struct {
 	mock.Mock
 }
 
-func (m *MockOsHandler)  Execute(query string) (bytes.Buffer, error) {
+func (m *MockOsHandler) Execute(query string) (bytes.Buffer, error) {
 	args := m.Called(query)
 	return args.Get(0).(bytes.Buffer), args.Error(1)
 }

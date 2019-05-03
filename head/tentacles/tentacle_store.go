@@ -51,6 +51,6 @@ func (s *store) RemoveTentacle(name string) bool {
 }
 
 func (s *store) GetTentacle(name string) (shared.Tentacle, bool) {
-	t, ok :=  s.tentacles[name]
+	t, ok := s.tentacles[name]
 	return t, ok
 }

@@ -34,6 +34,7 @@ define textlogo
                                                             |_|
 endef
 
+
 .PHONY: head
 head:
 	$(GOBUILD) -o $(BINARY_NAME_HEAD) -v ./head/main/
@@ -66,11 +67,14 @@ run.all: logo run.docker run.tentacle
 
 .PHONY: test.head
 test.head:
-	$(GOBUILD) -v ./head/...
+	$(GOTEST) -v ./head/...
 
 .PHONY: test.tentacle
 test.tentacle:
-	$(GOBUILD) -v ./tentacle/...
+	$(GOTEST) -v ./tentacle/...
+
+.PHONY: test
+test: test.head test.tentacle
 
 .PHONY: logo
 logo:
@@ -88,3 +92,5 @@ sanitize:
 	go fmt ./tentacle/...
     go vet -composites=false ./head/...
     go vet -composites=false ./tentacle/...
+
+
