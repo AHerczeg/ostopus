@@ -17,16 +17,16 @@ func TestNewLocalQueryStore(t *testing.T) {
 			want:    &localQueryStore{queries: map[string]string{}},
 		},
 		{
-			name:    "One map of standard queries",
+			name: "One map of standard queries",
 			queries: []map[string]string{
 				{
 					"foo": "bar",
 				},
 			},
-			want:    &localQueryStore{queries: map[string]string{"foo": "bar",}},
+			want: &localQueryStore{queries: map[string]string{"foo": "bar"}},
 		},
 		{
-			name:    "Multiple maps of standard queries",
+			name: "Multiple maps of standard queries",
 			queries: []map[string]string{
 				{
 					"foo1": "bar1",
@@ -41,14 +41,14 @@ func TestNewLocalQueryStore(t *testing.T) {
 					"foo6": "bar6",
 				},
 			},
-			want:    &localQueryStore{queries: map[string]string{
-					"foo1": "bar1",
-					"foo2": "bar2",
-					"foo3": "bar3",
-					"foo4": "bar4",
-					"foo5": "bar5",
-					"foo6": "bar6",
-				},
+			want: &localQueryStore{queries: map[string]string{
+				"foo1": "bar1",
+				"foo2": "bar2",
+				"foo3": "bar3",
+				"foo4": "bar4",
+				"foo5": "bar5",
+				"foo6": "bar6",
+			},
 			},
 		},
 	}
@@ -146,3 +146,86 @@ func Test_localQueryStore_GetQuery(t *testing.T) {
 	}
 }
 
+func Test_localQueryStore_HasQuery(t *testing.T) {
+	type fields struct {
+		queries map[string]string
+	}
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   bool
+	}{
+		{
+			name: "Nil query",
+			fields: fields{
+				queries: map[string]string{},
+			},
+			args: args{
+				name: "",
+			},
+			want: false,
+		},
+		{
+			name: "Initialised queries, query not in store",
+			fields: fields{
+				queries: map[string]string{
+					"foo": "bar",
+				},
+			},
+			args: args{
+				name: "other_query",
+			},
+			want: false,
+		},
+		{
+			name: "Initialised queries, query in store",
+			fields: fields{
+				queries: map[string]string{
+					"foo": "bar",
+				},
+			},
+			args: args{
+				name: "foo",
+			},
+			want: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qs := &localQueryStore{
+				queries: tt.fields.queries,
+			}
+			if got := qs.HasQuery(tt.args.name); got != tt.want {
+				t.Errorf("localQueryStore.HasQuery() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_localQueryStore_AddQueries(t *testing.T) {
+	type fields struct {
+		queries map[string]string
+	}
+	type args struct {
+		queries map[string]string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qs := &localQueryStore{
+				queries: tt.fields.queries,
+			}
+			qs.AddQueries(tt.args.queries)
+		})
+	}
+}
