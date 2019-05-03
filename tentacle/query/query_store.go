@@ -11,7 +11,7 @@ var (
 	}
 )
 
-type QueryStore interface {
+type Store interface {
 	GetQuery(name string) (string, bool)
 	HasQuery(name string) bool
 	AddQueries(queries map[string]string)

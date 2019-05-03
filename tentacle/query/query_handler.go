@@ -23,11 +23,11 @@ type Handler interface {
 }
 
 type StdHandler struct {
-	queryStore QueryStore
+	queryStore Store
 	osHandler  os.Handler
 }
 
-func InitQueryHandler(store QueryStore, os os.Handler) {
+func InitQueryHandler(store Store, os os.Handler) {
 	queryHandler = StdHandler{queryStore: store, osHandler: os}
 }
 
