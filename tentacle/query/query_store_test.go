@@ -162,7 +162,7 @@ func Test_localQueryStore_HasQuery(t *testing.T) {
 		{
 			name: "Nil query",
 			fields: fields{
-				queries: map[string]string{},
+				queries: nil,
 			},
 			args: args{
 				name: "",
@@ -217,8 +217,77 @@ func Test_localQueryStore_AddQueries(t *testing.T) {
 		name   string
 		fields fields
 		args   args
+		want   map[string]string
 	}{
-		// TODO: Add test cases.
+		{
+			name: "Adding nil to nil",
+			fields: fields{
+				queries: nil,
+			},
+			args: args{
+				queries: nil,
+			},
+			want: nil,
+		},
+		{
+			name: "Adding nil to initialised queries",
+			fields: fields{
+				queries: map[string]string{
+					"foo": "bar",
+				},
+			},
+			args: args{
+				queries: nil,
+			},
+			want: map[string]string{"foo": "bar"},
+		},
+		{
+			name: "Adding queries to nil",
+			fields: fields{
+				queries: nil,
+			},
+			args: args{
+				queries: map[string]string{
+					"foo": "bar",
+				},
+			},
+			want: nil,
+		},
+		{
+			name: "Adding one query",
+			fields: fields{
+				queries: map[string]string{
+					"foo": "bar",
+				},
+			},
+			args: args{
+				queries: map[string]string{
+					"new": "query",
+				},
+			},
+			want: map[string]string{"foo": "bar", "new": "query"},
+		},
+		{
+			name: "Adding multiple queries",
+			fields: fields{
+				queries: map[string]string{
+					"foo": "bar",
+				},
+			},
+			args: args{
+				queries: map[string]string{
+					"new1": "query1",
+					"new2": "query2",
+					"new3": "query3",
+				},
+			},
+			want: map[string]string{
+				"foo":  "bar",
+				"new1": "query1",
+				"new2": "query2",
+				"new3": "query3",
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -226,6 +295,76 @@ func Test_localQueryStore_AddQueries(t *testing.T) {
 				queries: tt.fields.queries,
 			}
 			qs.AddQueries(tt.args.queries)
+			if !reflect.DeepEqual(qs.queries, tt.want) {
+				t.Errorf("localQueryStore.AddQueris() = %v, want %v", qs.queries, tt.want)
+			}
 		})
 	}
 }
+
+func Test_localQueryStore_AddQuery(t *testing.T) {
+	type fields struct {
+		queries map[string]string
+	}
+	type args struct {
+		name  string
+		query string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   map[string]string
+	}{
+		{
+			name: "Adding query to nil",
+			fields: fields{
+				queries: nil,
+			},
+			args: args{
+				name: "foo",
+				query: "bar",
+			},
+			want: nil,
+		},
+		{
+			name: "Adding one query",
+			fields: fields{
+				queries: map[string]string{
+					"foo": "bar",
+				},
+			},
+			args: args{
+				name: "new",
+				query: "query",
+			},
+			want: map[string]string{"foo": "bar", "new": "query"},
+		},
+		{
+			name: "Adding one query already in store",
+			fields: fields{
+				queries: map[string]string{
+					"foo": "bar",
+				},
+			},
+			args: args{
+				name: "foo",
+				query: "bar",
+			},
+			want: map[string]string{"foo": "bar"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			qs := &localQueryStore{
+				queries: tt.fields.queries,
+			}
+			qs.AddQuery(tt.args.name, tt.args.query)
+			if !reflect.DeepEqual(qs.queries, tt.want) {
+				t.Errorf("localQueryStore.AddQuery() = %v, want %v", qs.queries, tt.want)
+			}
+		})
+	}
+}
+
+

@@ -50,6 +50,10 @@ func (qs *localQueryStore) AddQueries(queries map[string]string) {
 }
 
 func (qs *localQueryStore) AddQuery(name, query string) {
+	if qs.queries == nil {
+		logrus.Error("queries collection is not initialised, cannot add new queries")
+		return
+	}
 	if _, ok := qs.queries[name]; ok {
 		logrus.Info("A query with query already exists in query store", "query", name)
 	} else {
@@ -57,10 +61,7 @@ func (qs *localQueryStore) AddQuery(name, query string) {
 	}
 }
 
-func Foo(i int) int {
-	return i
-}
-
+/** Mocks **/
 
 type MockQueryStore struct {
 	mock.Mock

@@ -80,6 +80,8 @@ func cleanJSON(out bytes.Buffer) []byte {
 }
 
 
+/** Mocks **/
+
 type MockQueryHandler struct {
 	mock.Mock
 }
