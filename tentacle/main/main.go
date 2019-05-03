@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"github.com/sirupsen/logrus"
 	"ostopus/tentacle/local"
 	"ostopus/tentacle/os"
@@ -10,18 +11,19 @@ import (
 )
 
 var (
-	QueryHandler *query.StdHandler
+	address		= flag.String("address", ":7070", "the address tentacle is serving on")
+	name		= flag.String("selfName", "test", "the name of this specific tentacle instance")
 )
 
 func main() {
 	logrus.Info("Starting up tentacle...")
 
-	local.InitSelf("test", "http://localhost:7070")
-
 	osHandler := os.NewOSHandler()
 	queryStore := query.NewLocalQueryStore()
 	query.InitQueryHandler(queryStore, osHandler)
 
-	rest.StartRouter(":7070")
+	rest.StartServing(*address)
+
+	local.InitSelf(*name, *address)
 
 }

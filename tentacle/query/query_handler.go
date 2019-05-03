@@ -8,9 +8,12 @@ import (
 	"github.com/stretchr/testify/mock"
 	"ostopus/tentacle/os"
 	"regexp"
+	"sync"
 )
 
 var (
+	once sync.Once
+
 	queryHandler StdHandler
 	jsonRegex    = regexp.MustCompile("{\\s*(\"[^\"]*\":\"[^\"]*\"\\s*)+(,\\s*(\"[^\"]*\":\"[^\"]*\")\\s*)*}")
 )
@@ -28,7 +31,9 @@ type StdHandler struct {
 }
 
 func InitQueryHandler(store Store, os os.Handler) {
-	queryHandler = StdHandler{queryStore: store, osHandler: os}
+	once.Do(func() {
+		queryHandler = StdHandler{queryStore: store, osHandler: os}
+	})
 }
 
 func GetQueryHandler() *StdHandler {

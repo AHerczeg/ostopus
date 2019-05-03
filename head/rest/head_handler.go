@@ -23,24 +23,8 @@ type queryRequest struct {
 	Query   shared.Query
 }
 
-func MustStartRouter(address string) {
-	if err := StartRouter(address); err != nil {
-		panic(err)
-	}
-}
-
-func StartRouter(address string) error {
-	logrus.Info("Starting up router")
-	router := mux.NewRouter()
-	setupRouter(router)
-	logrus.Info("Listening and serving HTTP", "Address", address)
-
-	if err := http.ListenAndServe(address, router); err != nil {
-		logrus.WithError(err)
-		return err
-	}
-
-	return nil
+func StartServing(address string) {
+	shared.MustStartRouter(address, setupRouter)
 }
 
 func setupRouter(router *mux.Router) {
@@ -71,19 +55,19 @@ func registerTentacle(w http.ResponseWriter, r *http.Request) {
 }
 
 func removeTentacle(w http.ResponseWriter, r *http.Request) {
-	decoder := json.NewDecoder(r.Body)
-	var request string
-	err := decoder.Decode(&request)
+	request, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Error(err)
-		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while reading request"))
+		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unable to read request"))
+		return
 	}
 
-	result := tentacles.Tentacles().RemoveTentacle(request)
+
+	result := tentacles.Tentacles().RemoveTentacle(string(request))
 	if result {
 		shared.WriteResponse(w, http.StatusOK, []byte{})
 	} else {
-		shared.WriteResponse(w, http.StatusInternalServerError, []byte{})
+		shared.WriteResponse(w, http.StatusNotFound, []byte{})
 	}
 }
 
@@ -195,7 +179,7 @@ func syncQuery(query []byte, tentacle shared.Tentacle, results *sync.Map, wg *sy
 
 func sendQuery(query []byte, address string) string {
 	req, err := http.NewRequest("POST", address+"/query", bytes.NewBuffer(query))
-	client := GetDefaultClient()
+	client := shared.GetDefaultClient()
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {

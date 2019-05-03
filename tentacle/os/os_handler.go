@@ -6,6 +6,11 @@ import (
 	"os/exec"
 )
 
+const (
+	osqueryCommand		= "osqueryi"
+	osqueryArguments	= "--json"
+)
+
 type Handler interface {
 	Execute(string) (bytes.Buffer, error)
 }
@@ -19,7 +24,7 @@ func NewOSHandler() Handler {
 
 func (oh stdOSHandler) Execute(query string) (bytes.Buffer, error) {
 	var out bytes.Buffer
-	cmd := exec.Command("osqueryi", "--json", query)
+	cmd := exec.Command(osqueryCommand, osqueryArguments, query)
 	cmd.Stdout = &out
 	err := cmd.Run()
 	if err != nil {
@@ -27,6 +32,9 @@ func (oh stdOSHandler) Execute(query string) (bytes.Buffer, error) {
 	}
 	return out, nil
 }
+
+
+/** Mocks **/
 
 type MockOsHandler struct {
 	mock.Mock

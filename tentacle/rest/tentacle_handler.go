@@ -14,12 +14,8 @@ import (
 	tentacleQuery "ostopus/tentacle/query"
 )
 
-func StartRouter(address string) {
-	logrus.Info("Starting up router")
-	router := mux.NewRouter()
-	setupRouter(router)
-	logrus.Info("Listening and serving HTTP", "Address", address)
-	http.ListenAndServe(address, router)
+func StartServing(address string) {
+	shared.MustStartRouter(address, setupRouter)
 }
 
 func setupRouter(router *mux.Router) {
@@ -58,9 +54,8 @@ func register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	req, err := http.NewRequest("POST", headAddress, bytes.NewBuffer(marshaledSelf))
-	client := GetDefaultClient()
-	resp, err := client.Do(req)
+	client := shared.GetDefaultClient()
+	resp, err := client.Post(headAddress, "application/json", bytes.NewBuffer(marshaledSelf))
 	if err != nil {
 		logrus.Error(err)
 		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while registering tentacle"))
