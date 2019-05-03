@@ -110,7 +110,7 @@ func TestHandler_RunSavedQuery(t *testing.T) {
 				executeError:    nil,
 			},
 			want: ResultDTO{
-				Arguments: map[string]interface{}{
+				Arguments: map[string]string{
 					"arguments": "",
 					"device":    "1",
 					"path":      "/System/Library/",
@@ -202,7 +202,7 @@ func TestStdHandler_RunCustomQuery(t *testing.T) {
 				executeError:    nil,
 			},
 			want: ResultDTO{
-				Arguments: map[string]interface{}{
+				Arguments: map[string]string{
 					"arguments": "",
 					"device":    "1",
 					"path":      "/System/Library/",
@@ -359,7 +359,7 @@ func TestStdHandler_executeQuery(t *testing.T) {
 				executeError:    nil,
 			},
 			want: ResultDTO{
-				Arguments: map[string]interface{}{
+				Arguments: map[string]string{
 					"arguments": "",
 					"device":    "1",
 					"path":      "/System/Library/",

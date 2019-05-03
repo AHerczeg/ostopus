@@ -5,10 +5,10 @@ import (
 )
 
 type ResultDTO struct {
-	Arguments map[string]interface{}
+	Arguments map[string]string
 }
 
-func (r ResultDTO) GetField(field string) interface{} {
+func (r ResultDTO) GetField(field string) string {
 	return r.Arguments[field]
 }
 
