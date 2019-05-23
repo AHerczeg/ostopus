@@ -1,7 +1,7 @@
 package tentacles
 
 import (
-	"ostopus/shared"
+	"github.com/AHerczeg/ostopus/shared"
 )
 
 var (

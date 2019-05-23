@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"ostopus/tentacle/os"
+	"github.com/AHerczeg/ostopus/tentacle/os"
 	"reflect"
 	"testing"
 

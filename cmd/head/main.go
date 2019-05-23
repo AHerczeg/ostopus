@@ -1,9 +1,9 @@
-package main
+package head
 
 import (
 	"flag"
+	"github.com/AHerczeg/ostopus/head/rest"
 	"github.com/sirupsen/logrus"
-	"ostopus/head/rest"
 )
 
 var (

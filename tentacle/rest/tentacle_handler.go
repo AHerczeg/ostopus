@@ -4,14 +4,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/AHerczeg/ostopus/shared"
+	"github.com/AHerczeg/ostopus/tentacle/local"
+	tentacleQuery "github.com/AHerczeg/ostopus/tentacle/query"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"ostopus/shared"
-	"ostopus/tentacle/local"
-	tentacleQuery "ostopus/tentacle/query"
 )
 
 func StartServing(address string) {

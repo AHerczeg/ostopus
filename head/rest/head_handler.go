@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/AHerczeg/ostopus/head/tentacles"
+	"github.com/AHerczeg/ostopus/shared"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
-	"ostopus/head/tentacles"
-	"ostopus/shared"
 	"sync"
 )
 
@@ -61,7 +61,6 @@ func removeTentacle(w http.ResponseWriter, r *http.Request) {
 		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unable to read request"))
 		return
 	}
-
 
 	result := tentacles.Tentacles().RemoveTentacle(string(request))
 	if result {

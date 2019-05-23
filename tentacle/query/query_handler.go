@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/AHerczeg/ostopus/tentacle/os"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
-	"ostopus/tentacle/os"
 	"regexp"
 	"sync"
 )

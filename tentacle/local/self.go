@@ -2,8 +2,8 @@ package local
 
 import (
 	"fmt"
+	"github.com/AHerczeg/ostopus/shared"
 	"github.com/sirupsen/logrus"
-	"ostopus/shared"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 
 func InitSelf(name, address string) {
 	self.Name = name
-	self.Address = fmt.Sprintf("https://%v",address)
+	self.Address = fmt.Sprintf("https://%v", address)
 	logrus.WithFields(logrus.Fields{"name": name, "address": address}).Info("Tentacle initialised")
 }
 
