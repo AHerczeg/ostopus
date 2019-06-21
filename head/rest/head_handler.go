@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"sync"
+	"time"
+
 	"github.com/AHerczeg/ostopus/head/tentacles"
 	"github.com/AHerczeg/ostopus/shared"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
-	"net/http"
-	"sync"
 )
 
 type pingResponse struct {
@@ -24,7 +26,7 @@ type queryRequest struct {
 }
 
 func StartServing(address string) {
-	shared.MustStartRouter(address, setupRouter)
+	MustStartRouter(address, setupRouter)
 }
 
 func setupRouter(router *mux.Router) {
@@ -40,33 +42,33 @@ func registerTentacle(w http.ResponseWriter, r *http.Request) {
 	var tentacle shared.Tentacle
 
 	if err := json.NewDecoder(r.Body).Decode(&tentacle); err != nil {
-		shared.WriteResponse(w, http.StatusBadRequest, []byte("failed to parse tentacle"))
+		writeResponse(w, http.StatusBadRequest, []byte("failed to parse tentacle"))
 		return
 	}
 
 	if tentacles.Tentacles().HasTentacle(tentacle.Name) {
-		shared.WriteResponse(w, http.StatusConflict, []byte("name already in use"))
+		writeResponse(w, http.StatusConflict, []byte("name already in use"))
 		return
 	}
 
 	tentacles.Tentacles().SaveTentacle(tentacle)
 	logrus.WithFields(logrus.Fields{"Name": tentacle.Name, "Address": tentacle.Address}).Info("New tentacle registered")
-	shared.WriteResponse(w, http.StatusCreated, []byte{})
+	writeResponse(w, http.StatusCreated, []byte{})
 }
 
 func removeTentacle(w http.ResponseWriter, r *http.Request) {
 	request, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Error(err)
-		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unable to read request"))
+		writeResponse(w, http.StatusInternalServerError, []byte("unable to read request"))
 		return
 	}
 
 	result := tentacles.Tentacles().RemoveTentacle(string(request))
 	if result {
-		shared.WriteResponse(w, http.StatusOK, []byte{})
+		writeResponse(w, http.StatusOK, []byte{})
 	} else {
-		shared.WriteResponse(w, http.StatusNotFound, []byte{})
+		writeResponse(w, http.StatusNotFound, []byte{})
 	}
 }
 
@@ -76,7 +78,7 @@ func pingAll(w http.ResponseWriter, _ *http.Request) {
 
 	// If there are no tentacles we can quit early
 	if len(allTentacles) == 0 {
-		shared.WriteResponse(w, http.StatusOK, []byte("{}"))
+		writeResponse(w, http.StatusOK, []byte("{}"))
 		return
 	}
 
@@ -99,10 +101,10 @@ func pingAll(w http.ResponseWriter, _ *http.Request) {
 
 	if err != nil {
 		logrus.Error(err)
-		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while preparing response"))
+		writeResponse(w, http.StatusInternalServerError, []byte("unexpected error while preparing response"))
 	}
 
-	shared.WriteResponse(w, http.StatusOK, marshaledResults)
+	writeResponse(w, http.StatusOK, marshaledResults)
 }
 
 func relayQuery(w http.ResponseWriter, r *http.Request) {
@@ -111,19 +113,19 @@ func relayQuery(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&request)
 	if err != nil {
 		logrus.Error(err)
-		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while reading request"))
+		writeResponse(w, http.StatusInternalServerError, []byte("unexpected error while reading request"))
 	}
 
 	logrus.WithFields(logrus.Fields{"targets": request.Targets, "query": request.Query}).Info("Relaying new query")
 
 	if !request.Query.Validate() {
-		shared.WriteResponse(w, http.StatusBadRequest, []byte("malformed query or frequency"))
+		writeResponse(w, http.StatusBadRequest, []byte("malformed query or frequency"))
 	}
 
 	marshaledQuery, err := json.Marshal(request.Query)
 	if err != nil {
 		logrus.Error(err)
-		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while parsing query"))
+		writeResponse(w, http.StatusInternalServerError, []byte("unexpected error while parsing query"))
 	}
 
 	var results sync.Map
@@ -143,10 +145,10 @@ func relayQuery(w http.ResponseWriter, r *http.Request) {
 	marshaledMap, err := marshalSyncMap(results)
 	if err != nil {
 		logrus.Error(err)
-		shared.WriteResponse(w, http.StatusInternalServerError, []byte("unexpected error while parsing results"))
+		writeResponse(w, http.StatusInternalServerError, []byte("unexpected error while parsing results"))
 	}
 
-	shared.WriteResponse(w, http.StatusOK, marshaledMap)
+	writeResponse(w, http.StatusOK, marshaledMap)
 
 }
 
@@ -178,7 +180,7 @@ func syncQuery(query []byte, tentacle shared.Tentacle, results *sync.Map, wg *sy
 
 func sendQuery(query []byte, address string) string {
 	req, err := http.NewRequest("POST", address+"/query", bytes.NewBuffer(query))
-	client := shared.GetDefaultClient()
+	client := GetDefaultClient()
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
@@ -207,5 +209,43 @@ func marshalSyncMap(syncMap sync.Map) ([]byte, error) {
 }
 
 func notFound(w http.ResponseWriter, r *http.Request) {
-	shared.WriteResponse(w, http.StatusNotFound, []byte{})
+	writeResponse(w, http.StatusNotFound, []byte{})
+}
+
+func writeResponse(w http.ResponseWriter, code int, response []byte) {
+	w.WriteHeader(code)
+	if len(response) > 0 {
+		w.Write(response)
+	}
+}
+
+func GetDefaultClient() http.Client {
+	return http.Client{
+		Timeout: time.Second * 10,
+	}
+}
+
+func MustStartRouter(address string, routerSetup func(*mux.Router)) {
+	if err := startRouter(address, routerSetup); err != nil {
+		panic(err)
+	}
+}
+
+func startRouter(address string, routerSetup func(*mux.Router)) error {
+	logrus.Info("Starting up router")
+	router := mux.NewRouter()
+
+	//router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+
+	routerSetup(router)
+	logrus.WithFields(logrus.Fields{
+		"address": address,
+	}).Info("Listening and serving HTTP", "Address")
+
+	if err := http.ListenAndServe(address, router); err != nil {
+		logrus.WithError(err)
+		return err
+	}
+
+	return nil
 }

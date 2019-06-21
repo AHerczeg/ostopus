@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"sync"
+
 	"github.com/AHerczeg/ostopus/tentacle/os"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/mock"
-	"regexp"
-	"sync"
 )
 
 var (

@@ -2,6 +2,7 @@ package local
 
 import (
 	"fmt"
+
 	"github.com/AHerczeg/ostopus/shared"
 	"github.com/sirupsen/logrus"
 )

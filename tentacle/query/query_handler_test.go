@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/AHerczeg/ostopus/tentacle/os"
 	"reflect"
 	"testing"
+
+	"github.com/AHerczeg/ostopus/tentacle/os"
 
 	"github.com/stretchr/testify/mock"
 )

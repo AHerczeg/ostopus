@@ -2,13 +2,14 @@ package os
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/mock"
 	"os/exec"
+
+	"github.com/stretchr/testify/mock"
 )
 
 const (
-	osqueryCommand		= "osqueryi"
-	osqueryArguments	= "--json"
+	osqueryCommand   = "osqueryi"
+	osqueryArguments = "--json"
 )
 
 type Handler interface {
@@ -32,7 +33,6 @@ func (oh stdOSHandler) Execute(query string) (bytes.Buffer, error) {
 	}
 	return out, nil
 }
-
 
 /** Mocks **/
 

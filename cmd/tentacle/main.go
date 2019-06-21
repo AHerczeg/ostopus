@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/AHerczeg/ostopus/tentacle/local"
 	"github.com/AHerczeg/ostopus/tentacle/os"
 	_ "github.com/AHerczeg/ostopus/tentacle/os"

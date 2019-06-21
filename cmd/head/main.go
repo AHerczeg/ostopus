@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+
 	"github.com/AHerczeg/ostopus/head/rest"
 	"github.com/sirupsen/logrus"
 )
