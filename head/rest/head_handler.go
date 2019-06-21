@@ -35,7 +35,15 @@ func StartServing(address string) {
 func setupRouter(router *mux.Router) {
 	router.HandleFunc("/register", registerTentacle).Methods("POST")
 	router.HandleFunc("/remove", removeTentacle).Methods("DELETE")
+
+	// swagger:operation GET /ping ping
+	//
+	// ---
+	// responses:
+	//   '200':
+	//     description: successful operation
 	router.HandleFunc("/ping", pingAll).Methods("GET")
+
 	router.HandleFunc("/query", relayQuery).Methods("POST")
 	router.NotFoundHandler = http.HandlerFunc(notFound)
 

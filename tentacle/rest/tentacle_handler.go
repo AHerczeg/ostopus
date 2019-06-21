@@ -24,6 +24,7 @@ func setupRouter(router *mux.Router) {
 	router.HandleFunc("/query", receiveCommand).Methods("POST")
 	router.HandleFunc("/register", register).Methods("POST")
 	router.HandleFunc("/ping", ping).Methods("GET")
+
 	router.NotFoundHandler = http.HandlerFunc(notFound)
 }
 
