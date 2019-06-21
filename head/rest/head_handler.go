@@ -13,6 +13,9 @@ import (
 	"github.com/AHerczeg/ostopus/shared"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
+
+	_ "github.com/AHerczeg/ostopus/head/docs"
+	"github.com/swaggo/http-swagger"
 )
 
 type pingResponse struct {
@@ -233,9 +236,9 @@ func MustStartRouter(address string, routerSetup func(*mux.Router)) {
 
 func startRouter(address string, routerSetup func(*mux.Router)) error {
 	logrus.Info("Starting up router")
-	router := mux.NewRouter()
 
-	//router.PathPrefix("/swagger/").Handler(httpSwagger.WrapHandler)
+	router := mux.NewRouter()
+	router.PathPrefix("/documentation/").Handler(httpSwagger.WrapHandler)
 
 	routerSetup(router)
 	logrus.WithFields(logrus.Fields{
