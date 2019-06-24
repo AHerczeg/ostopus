@@ -1,0 +1,140 @@
+---
+swagger: "2.0"
+info:
+  description: The OStopus Head (server) API
+  title: OStopus Head
+  version: 1.0.0
+consumes:
+  - application/json
+produces:
+  - application/json
+schemes:
+  - http
+  - https
+paths:
+  /register:
+    post:
+      tags:
+        - Tentacle
+      operationId: registerTentacle
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/tentacle"
+      responses:
+        201:
+          description: Created
+        400:
+          description: Malformed request
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+  /{id}:
+    parameters:
+      - type: integer
+        format: int64
+        name: id
+        in: path
+        required: true
+    delete:
+      tags:
+        - Tentacle
+      operationId: removeTentacle
+      responses:
+        204:
+          description: Deleted
+        404:
+          description: Not found
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+  /pingall:
+    get:
+      tags:
+        - Tentacle
+      operationId: pingTentacles
+      responses:
+        200:
+          description: Pinged
+          schema:
+            type: string
+        500:
+          description: Server error
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+  /query:
+    post:
+      tags:
+        - Tentacle
+      operationId: queryTentacles
+      parameters:
+        - name: body
+          in: body
+          schema:
+            $ref: "#/definitions/query"
+      responses:
+        200:
+          description: Queried
+        400:
+          description: Malformed request
+          schema:
+            $ref: "#/definitions/error"
+        500:
+          description: Server error
+          schema:
+            $ref: "#/definitions/error"
+        default:
+          description: error
+          schema:
+            $ref: "#/definitions/error"
+definitions:
+  tentacle:
+    type: object
+    required:
+      - address
+    properties:
+      id:
+        type: integer
+        format: int64
+        readOnly: true
+      name:
+        type: string
+        minLength: 1
+      address:
+        type: string
+        minLength: 1
+  query:
+    type: object
+    required:
+      - target
+      - command
+    properties:
+      target:
+        type: array
+        items:
+          type: integer
+      command:
+        type: string
+        minLength: 1
+      frequency:
+        type: string
+        minLength: 1
+  error:
+    type: object
+    required:
+      - message
+    properties:
+      code:
+        type: integer
+        format: int64
+      message:
+        type: string

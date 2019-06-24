@@ -1,4 +1,4 @@
-package rest
+package handlers
 
 import (
 	"bytes"
@@ -7,15 +7,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"sync"
-	"time"
 
+	"github.com/AHerczeg/ostopus/head/rest"
 	"github.com/AHerczeg/ostopus/head/tentacles"
 	"github.com/AHerczeg/ostopus/shared"
-	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 
 	_ "github.com/AHerczeg/ostopus/head/docs"
-	"github.com/swaggo/http-swagger"
 )
 
 type pingResponse struct {
@@ -28,28 +26,7 @@ type queryRequest struct {
 	Query   shared.Query
 }
 
-func StartServing(address string) {
-	MustStartRouter(address, setupRouter)
-}
-
-func setupRouter(router *mux.Router) {
-	router.HandleFunc("/register", registerTentacle).Methods("POST")
-	router.HandleFunc("/remove", removeTentacle).Methods("DELETE")
-
-	// swagger:operation GET /ping ping
-	//
-	// ---
-	// responses:
-	//   '200':
-	//     description: successful operation
-	router.HandleFunc("/ping", pingAll).Methods("GET")
-
-	router.HandleFunc("/query", relayQuery).Methods("POST")
-	router.NotFoundHandler = http.HandlerFunc(notFound)
-
-}
-
-func registerTentacle(w http.ResponseWriter, r *http.Request) {
+func RegisterTentacle(w http.ResponseWriter, r *http.Request) {
 	var tentacle shared.Tentacle
 
 	if err := json.NewDecoder(r.Body).Decode(&tentacle); err != nil {
@@ -67,7 +44,7 @@ func registerTentacle(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, http.StatusCreated, []byte{})
 }
 
-func removeTentacle(w http.ResponseWriter, r *http.Request) {
+func RemoveTentacle(w http.ResponseWriter, r *http.Request) {
 	request, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		logrus.Error(err)
@@ -83,7 +60,7 @@ func removeTentacle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func pingAll(w http.ResponseWriter, _ *http.Request) {
+func PingAll(w http.ResponseWriter, _ *http.Request) {
 	results := make(map[string]bool)
 	allTentacles := tentacles.Tentacles().GetAllTentacles()
 
@@ -118,7 +95,7 @@ func pingAll(w http.ResponseWriter, _ *http.Request) {
 	writeResponse(w, http.StatusOK, marshaledResults)
 }
 
-func relayQuery(w http.ResponseWriter, r *http.Request) {
+func RelayQuery(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var request queryRequest
 	err := decoder.Decode(&request)
@@ -191,7 +168,7 @@ func syncQuery(query []byte, tentacle shared.Tentacle, results *sync.Map, wg *sy
 
 func sendQuery(query []byte, address string) string {
 	req, err := http.NewRequest("POST", address+"/query", bytes.NewBuffer(query))
-	client := GetDefaultClient()
+	client := rest.GetDefaultClient()
 	resp, err := client.Do(req)
 	defer resp.Body.Close()
 	if err != nil {
@@ -219,7 +196,7 @@ func marshalSyncMap(syncMap sync.Map) ([]byte, error) {
 	return json.Marshal(tmpMap)
 }
 
-func notFound(w http.ResponseWriter, r *http.Request) {
+func NotFound(w http.ResponseWriter, r *http.Request) {
 	writeResponse(w, http.StatusNotFound, []byte{})
 }
 
@@ -228,35 +205,4 @@ func writeResponse(w http.ResponseWriter, code int, response []byte) {
 	if len(response) > 0 {
 		w.Write(response)
 	}
-}
-
-func GetDefaultClient() http.Client {
-	return http.Client{
-		Timeout: time.Second * 10,
-	}
-}
-
-func MustStartRouter(address string, routerSetup func(*mux.Router)) {
-	if err := startRouter(address, routerSetup); err != nil {
-		panic(err)
-	}
-}
-
-func startRouter(address string, routerSetup func(*mux.Router)) error {
-	logrus.Info("Starting up router")
-
-	router := mux.NewRouter()
-	router.PathPrefix("/documentation/").Handler(httpSwagger.WrapHandler)
-
-	routerSetup(router)
-	logrus.WithFields(logrus.Fields{
-		"address": address,
-	}).Info("Listening and serving HTTP", "Address")
-
-	if err := http.ListenAndServe(address, router); err != nil {
-		logrus.WithError(err)
-		return err
-	}
-
-	return nil
 }
