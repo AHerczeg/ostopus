@@ -1,56 +1,53 @@
 package rest
 
 import (
-	"net/http"
-	"time"
+	"log"
+	"os"
 
-	"github.com/AHerczeg/ostopus/head/rest/handlers"
-	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
-	httpSwagger "github.com/swaggo/http-swagger"
+	"github.com/AHerczeg/ostopus/head/api/rest"
+	"github.com/AHerczeg/ostopus/head/api/rest/operation"
+	"github.com/go-openapi/loads"
+	"github.com/jessevdk/go-flags"
 )
 
 func StartServing(address string) {
-	MustStartRouter(address, setupRouter)
-}
+	// TODO set address
 
-func setupRouter(router *mux.Router) {
-	router.HandleFunc("/register", handlers.RegisterTentacle).Methods("POST")
-	router.HandleFunc("/remove", handlers.RemoveTentacle).Methods("DELETE")
-
-	router.HandleFunc("/ping", handlers.PingAll).Methods("GET")
-
-	router.HandleFunc("/query", handlers.RelayQuery).Methods("POST")
-	router.NotFoundHandler = http.HandlerFunc(handlers.NotFound)
-}
-
-func GetDefaultClient() http.Client {
-	return http.Client{
-		Timeout: time.Second * 10,
-	}
-}
-
-func MustStartRouter(address string, routerSetup func(*mux.Router)) {
-	if err := startRouter(address, routerSetup); err != nil {
-		panic(err)
-	}
-}
-
-func startRouter(address string, routerSetup func(*mux.Router)) error {
-	logrus.Info("Starting up router")
-
-	router := mux.NewRouter()
-	router.PathPrefix("/documentation/").Handler(httpSwagger.WrapHandler)
-
-	routerSetup(router)
-	logrus.WithFields(logrus.Fields{
-		"address": address,
-	}).Info("Listening and serving HTTP", "Address")
-
-	if err := http.ListenAndServe(address, router); err != nil {
-		logrus.WithError(err)
-		return err
+	swaggerSpec, err := loads.Embedded(rest.SwaggerJSON, rest.FlatSwaggerJSON)
+	if err != nil {
+		log.Fatalln(err)
 	}
 
-	return nil
+	api := operation.NewOStopusAPI(swaggerSpec)
+	server := rest.NewServer(api)
+	server.EnabledListeners = []string{"http"}
+	defer server.Shutdown()
+
+	parser := flags.NewParser(server, flags.Default)
+	parser.ShortDescription = "OStopus Head"
+	parser.LongDescription = "The OStopus Head (server) API"
+
+	server.ConfigureFlags()
+	for _, optsGroup := range api.CommandLineOptionsGroups {
+		_, err := parser.AddGroup(optsGroup.ShortDescription, optsGroup.LongDescription, optsGroup.Options)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+
+	if _, err := parser.Parse(); err != nil {
+		code := 1
+		if fe, ok := err.(*flags.Error); ok {
+			if fe.Type == flags.ErrHelp {
+				code = 0
+			}
+		}
+		os.Exit(code)
+	}
+
+	server.ConfigureAPI()
+
+	if err := server.Serve(); err != nil {
+		log.Fatalln(err)
+	}
 }
