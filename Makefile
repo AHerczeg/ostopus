@@ -46,7 +46,7 @@ tentacle:
 
 .PHONY: swagger.head
 swagger.head:
-	swagger generate server --target ./head/api --name OStopus --spec ./head/api/swagger.yml --model-package model -a operation -s rest --exclude-main
+	swagger generate server --target ./head/api --name ostopus --spec ./head/api/swagger.yml --model-package model -a operation -s rest --exclude-main
 
 
 .PHONY: build.head
