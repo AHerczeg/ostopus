@@ -20,6 +20,7 @@ func StartServing(address string) {
 
 	api := operation.NewOstopusAPI(swaggerSpec)
 	server := rest.NewServer(api)
+	server.EnabledListeners = []string{"http"}
 	defer server.Shutdown()
 
 	parser := flags.NewParser(server, flags.Default)
