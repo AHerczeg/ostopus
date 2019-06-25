@@ -18,9 +18,8 @@ func StartServing(address string) {
 		log.Fatalln(err)
 	}
 
-	api := operation.NewOStopusAPI(swaggerSpec)
+	api := operation.NewOstopusAPI(swaggerSpec)
 	server := rest.NewServer(api)
-	server.EnabledListeners = []string{"http"}
 	defer server.Shutdown()
 
 	parser := flags.NewParser(server, flags.Default)
