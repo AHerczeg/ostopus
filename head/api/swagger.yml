@@ -116,7 +116,6 @@ definitions:
     type: object
     required:
       - target
-      - command
     properties:
       target:
         type: array
@@ -130,8 +129,6 @@ definitions:
         minLength: 1
   error:
     type: object
-    required:
-      - message
     properties:
       code:
         type: integer

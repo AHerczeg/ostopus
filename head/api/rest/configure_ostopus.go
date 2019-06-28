@@ -4,17 +4,32 @@ package rest
 
 import (
 	"crypto/tls"
+	"encoding/json"
+	"errors"
 	"net/http"
 
-	errors "github.com/go-openapi/errors"
-	runtime "github.com/go-openapi/runtime"
-	middleware "github.com/go-openapi/runtime/middleware"
+	"github.com/AHerczeg/ostopus/head/api/model"
+	"github.com/AHerczeg/ostopus/head/tentacles"
+	"github.com/AHerczeg/ostopus/shared"
+	"github.com/go-openapi/runtime"
+	"github.com/go-openapi/runtime/middleware"
+	"github.com/sirupsen/logrus"
 
 	"github.com/AHerczeg/ostopus/head/api/rest/operation"
 	"github.com/AHerczeg/ostopus/head/api/rest/operation/tentacle"
 )
 
 //go:generate swagger generate server --target ../../api --name Ostopus --spec ../swagger.yml --api-package operation --model-package model --server-package rest --exclude-main
+
+type pingResponse struct {
+	tentacle string
+	response bool
+}
+
+type restResponse struct {
+	code  int
+	error error
+}
 
 func configureFlags(api *operation.OstopusAPI) {
 	// api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{ ... }
@@ -36,7 +51,16 @@ func configureAPI(api *operation.OstopusAPI) http.Handler {
 
 	if api.TentaclePingTentaclesHandler == nil {
 		api.TentaclePingTentaclesHandler = tentacle.PingTentaclesHandlerFunc(func(params tentacle.PingTentaclesParams) middleware.Responder {
-			return middleware.NotImplemented("operation tentacle.PingTentacles has not yet been implemented")
+			responses, err := pingTentacles()
+			if err != nil {
+				switch err.Code {
+				case 500:
+					return tentacle.NewPingTentaclesInternalServerError().WithPayload(err)
+				default:
+					return tentacle.NewPingTentaclesDefault(500)
+				}
+			}
+			return tentacle.NewPingTentaclesOK().WithPayload(responses)
 		})
 	}
 	if api.TentacleQueryTentaclesHandler == nil {
@@ -82,4 +106,58 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
 	return handler
+}
+
+func pingTentacles() (string, *model.Error) {
+	results := make(map[string]bool)
+	allTentacles := tentacles.Tentacles().GetAllTentacles()
+
+	// If there are no tentacles we can quit early
+	if len(allTentacles) == 0 {
+		return "{}", nil
+	}
+
+	logrus.WithFields(logrus.Fields{"tentacles": len(allTentacles)}).Info("Pinging all tentacles")
+
+	responses := make(chan pingResponse, len(allTentacles))
+
+	for _, tentacle := range allTentacles {
+		go pingTentacle(tentacle, responses)
+	}
+
+	for range allTentacles {
+		r := <-responses
+		results[r.tentacle] = r.response
+	}
+
+	logrus.Info("Finished pinging")
+
+	marshaledResults, err := json.Marshal(results)
+	if err != nil {
+		logrus.Error(err)
+		return "", &model.Error{Code: 500, Message: "unexpected error while preparing response"}
+	}
+
+	return string(marshaledResults), nil
+}
+
+func pingTentacle(tentacle shared.Tentacle, response chan<- pingResponse) {
+	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address}).Info("Pinging tentacle")
+	res, err := http.Get(tentacle.Address + "/ping")
+	if err != nil {
+		logrus.WithError(err)
+		response <- pingResponse{
+			tentacle: tentacle.Name,
+			response: false,
+		}
+		return
+	}
+
+	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address, "code": res.StatusCode}).Info("Received ping response")
+	response <- pingResponse{
+		tentacle: tentacle.Name,
+		response: res.StatusCode == http.StatusOK,
+	}
+
+	logrus.WithFields(logrus.Fields{"name": tentacle.Name, "address": tentacle.Address}).Info("Finished pinging tentacle")
 }
