@@ -8,10 +8,11 @@ import (
 )
 
 var (
-	address = flag.String("address", ":6060", "the address head is serving on")
+	host = flag.String("host", "localhost", "the host head is serving on")
+	port = flag.Int("port", 6060, "the port head is serving on")
 )
 
 func main() {
 	logrus.Info("starting up OStopus head...")
-	rest.StartServing(*address)
+	rest.StartServing(*host, *port)
 }

@@ -1,7 +1,7 @@
 package tentacles
 
 import (
-	"github.com/AHerczeg/ostopus/shared"
+	"github.com/AHerczeg/ostopus/head/api/model"
 )
 
 var (
@@ -9,48 +9,48 @@ var (
 )
 
 type tentacleStore interface {
-	SaveTentacle(shared.Tentacle)
-	HasTentacle(string) bool
-	RemoveTentacle(string) bool
+	SaveTentacle(tentacle model.Tentacle)
+	HasTentacle(int64) bool
+	RemoveTentacle(int64) bool
 }
 
 type store struct {
-	tentacles map[string]shared.Tentacle
+	tentacles map[int64]model.Tentacle
 }
 
 func Tentacles() *store {
 	if tentacles == nil {
 		tentacles = &store{
-			tentacles: make(map[string]shared.Tentacle),
+			tentacles: make(map[int64]model.Tentacle),
 		}
 	}
 	return tentacles
 }
 
-func (s *store) SaveTentacle(tentacle shared.Tentacle) {
-	s.tentacles[tentacle.Name] = tentacle
+func (s *store) SaveTentacle(tentacle model.Tentacle) {
+	s.tentacles[tentacle.ID] = tentacle
 }
 
-func (s *store) GetAllTentacles() []shared.Tentacle {
-	var tentacles []shared.Tentacle
+func (s *store) GetAllTentacles() []model.Tentacle {
+	var tentacles []model.Tentacle
 	for _, tentacle := range s.tentacles {
 		tentacles = append(tentacles, tentacle)
 	}
 	return tentacles
 }
 
-func (s *store) HasTentacle(name string) bool {
-	_, ok := s.tentacles[name]
+func (s *store) HasTentacle(id int64) bool {
+	_, ok := s.tentacles[id]
 	return ok
 }
 
-func (s *store) RemoveTentacle(name string) bool {
-	_, ok := s.tentacles[name]
-	delete(s.tentacles, name)
+func (s *store) RemoveTentacle(id int64) bool {
+	_, ok := s.tentacles[id]
+	delete(s.tentacles, id)
 	return ok
 }
 
-func (s *store) GetTentacle(name string) (shared.Tentacle, bool) {
-	t, ok := s.tentacles[name]
+func (s *store) GetTentacle(id int64) (model.Tentacle, bool) {
+	t, ok := s.tentacles[id]
 	return t, ok
 }

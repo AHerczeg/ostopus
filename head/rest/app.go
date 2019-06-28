@@ -10,9 +10,7 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-func StartServing(address string) {
-	// TODO set address
-
+func StartServing(host string, port int) {
 	swaggerSpec, err := loads.Embedded(rest.SwaggerJSON, rest.FlatSwaggerJSON)
 	if err != nil {
 		log.Fatalln(err)
@@ -21,6 +19,8 @@ func StartServing(address string) {
 	api := operation.NewOstopusAPI(swaggerSpec)
 	server := rest.NewServer(api)
 	server.EnabledListeners = []string{"http"}
+	server.Host = host
+	server.Port = port
 	defer server.Shutdown()
 
 	parser := flags.NewParser(server, flags.Default)

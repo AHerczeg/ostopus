@@ -25,10 +25,9 @@ paths:
       responses:
         201:
           description: Created
-        400:
-          description: Malformed request
           schema:
-            $ref: "#/definitions/error"
+            type: integer
+            format: int64
         default:
           description: error
           schema:
@@ -84,6 +83,8 @@ paths:
       responses:
         200:
           description: Queried
+          schema:
+            $ref: "#/definitions/result"
         400:
           description: Malformed request
           schema:
@@ -116,6 +117,7 @@ definitions:
     type: object
     required:
       - target
+      - command
     properties:
       target:
         type: array
@@ -124,9 +126,19 @@ definitions:
       command:
         type: string
         minLength: 1
-      frequency:
-        type: string
-        minLength: 1
+  result:
+    type: object
+    properties:
+      payload:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+            result:
+              type: string
   error:
     type: object
     properties:
